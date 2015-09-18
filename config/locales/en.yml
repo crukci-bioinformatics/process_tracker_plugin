@@ -1,0 +1,14 @@
+# English strings go here for Rails i18n
+en:
+  project_state_caption: "ProjectStates"
+  project_state_title: "Project State Summary"
+
+  settings_root_projects_label: "Root Projects"
+  settings_root_projects_descr: "Issues under these root projects will be included in the report (semicolon-separated list)"
+  settings_user_groups_label: "User Groups"
+  settings_user_groups_descr: "Redmine users in these groups will be included in the report (semicolon-separated list)"
+
+  flag_days_since_logged_time: "Days since logged time in state %{state}: %{actual} > %{threshold}"
+  flag_days_in_state: "Days in state %{state}: %{actual} > %{threshold}"
+  flag_hours_logged: "Hours logged: %{logged} > %{threshold}"
+  flag_analyst_unassigned: "Analyst unassigned in state %{state}"

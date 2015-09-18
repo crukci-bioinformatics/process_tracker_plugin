@@ -1,0 +1,15 @@
+<tr class="ps_report_line">
+  <td class="ps_report_element"><a href="<%= issue_url(issue) %>"><%= issue.id %></a></td>
+  <td class="ps_report_element"><%= issue.project.name %></td>
+  <td class="ps_report_element"><%= issue.status %></td>
+  <td class="ps_report_element"><%= issue.subject %></td>
+  <% if flags.length > 0 %>
+    <td class="flagged">
+    <% flags.each do |f| %>
+      <div><%= f %></div>
+    <% end %>
+    </td>
+  <% else %>
+    <td></td>
+  <% end %>
+</tr>

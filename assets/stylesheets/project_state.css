@@ -1,0 +1,13 @@
+table#ps_summary span.flagged { color: #ff0000; }
+table#ps_summary td.counts { text-align: right; }
+table#ps_summary tbody tr:nth-child(even) { background: #B2F0D1; }
+table#ps_summary tbody tr:nth-child(odd) { background: #E6FAF0; }
+
+table#ps_report td.flagged { color: #ff0000; }
+table#ps_report tbody tr:nth-child(even) { background: #B2F0D1; }
+table#ps_report tbody tr:nth-child(odd) { background: #E6FAF0; }
+table#ps_report tr.ps_report_line td.ps_report_element { vertical-align: top; white-space: normal; text-align: left; }
+table#ps_report td#state_line { font-weight: bold; font-size: 120%; background: #FFF; padding-top: 10px; padding-bottom: 2px; }
+table#ps_report tr#hdr_line { font-weight: bold; font-size: 75%; background: #FFF;  }
+
+span#pss_owner { font-size: 150%; }
