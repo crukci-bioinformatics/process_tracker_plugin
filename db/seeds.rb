@@ -119,7 +119,6 @@ class ProjectStatePopulateDb
     end
     includedProjects.each do |proj|
       proj.issues.find_each do |i|
-        changes = i.state_journals.order(:changed_at)
         changes = i.journals.joins(:details).where(journal_details: { prop_key: psid}).order(:created_on)
         if changes.length > 0
           initial = changes[0].details.find_by(prop_key: psid).old_value
