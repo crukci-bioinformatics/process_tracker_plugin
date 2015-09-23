@@ -4,6 +4,7 @@ require 'project_state/utils'
 class StatesController < ApplicationController
   include ProjectStatePlugin::Utilities
   include ActionView::Helpers::NumberHelper
+  include ProjectStatePlugin::Defaults
 
   unloadable
 
@@ -68,6 +69,13 @@ class StatesController < ApplicationController
                  :state => issue.state)
     end
 
+    # status / state mismatch
+    if @@project_state_defaults[issue.status_id] != issue.state
+      flags << l(:flag_status_state_mismatch,
+                 :status => issue.status.name,
+                 :state => issue.state)
+    end
+
     return flags
   end
 
@@ -125,8 +133,25 @@ class StatesController < ApplicationController
     end
     @issues = iset
     @users = uset
-    @states = IssueCustomField.find_by(name: 'Project State').possible_values[0..-3]
+    @states = IssueCustomField.find_by(name: 'Project State').possible_values[0..-2]
     @flags = fset
+    @rowsum = {}
+    @rowflagsum = {}
+    @colsum = Hash.new(0)
+    @colflagsum = Hash.new(0)
+    @issues.keys.each do |u|
+      ulist = @issues[u]
+      utot = 0
+      uftot = 0
+      StatesController::INTERESTING.each do |s|
+        utot += ulist[s]
+        uftot += @flags[u][s]
+        @colsum[s] = @colsum[s] + ulist[s]
+        @colflagsum[s] = @colflagsum[s] + @flags[u][s]
+      end
+      @rowsum[u] = utot
+      @rowflagsum[u] = uftot
+    end
   end
 
   def show

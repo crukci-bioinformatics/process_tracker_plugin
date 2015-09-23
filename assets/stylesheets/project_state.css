@@ -1,7 +1,11 @@
 table#ps_summary span.flagged { color: #ff0000; }
-table#ps_summary td.counts { text-align: right; }
+table#ps_summary td.counts { text-align: right; padding: 3px; border-left: 1px solid white; }
+table#ps_summary td.user_counts { text-align: left; padding: 3px; }
+table#ps_summary td.rowsum { text-align: right; border-left: 1px solid black; padding: 3px; }
+table#ps_summary td.colsum { text-align: right; border-top: 1px solid black; border-left: 1px solid white; padding: 3px; }
 table#ps_summary tbody tr:nth-child(even) { background: #B2F0D1; }
 table#ps_summary tbody tr:nth-child(odd) { background: #E6FAF0; }
+table#ps_summary { border-collapse: collapse; }
 
 table#ps_report td.flagged { color: #ff0000; }
 table#ps_report tbody tr:nth-child(even) { background: #B2F0D1; }

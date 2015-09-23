@@ -12,3 +12,4 @@ en:
   flag_days_in_state: "Days in state %{state}: %{actual} > %{threshold}"
   flag_hours_logged: "Hours logged: %{logged} > %{threshold}"
   flag_analyst_unassigned: "Analyst unassigned in state %{state}"
+  flag_status_state_mismatch: "Mismatch: status = '%{status}' but state = '%{state}'"
