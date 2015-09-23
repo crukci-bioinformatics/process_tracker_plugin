@@ -38,7 +38,10 @@ module ProjectStatePlugin
                                 21 => 'Submit',
                                 22 => 'Prepare',
                                 23 => 'Submit',
-                                24 => 'Post'
+                                24 => 'Post',
+                                27 => 'Prepare',
+                                28 => 'Prepare',
+                                29 => 'Hold'
     }
 
   end
