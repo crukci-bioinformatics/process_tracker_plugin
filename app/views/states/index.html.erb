@@ -56,5 +56,10 @@
         <td class="colsum"><%= @colsum[s] %> (<span><%= @colflagsum[s] %></span>)</td>
       <% end %>
     <% end %>
+    <% if @totalflagsum > 0 %>
+      <td class="cornersum"><%= @totalsum %> (<span class="flagged"><%= @totalflagsum %></span>)</td>
+    <% else %>
+      <td class="cornersum"><%= @totalsum %> (<span><%= @totalflagsum %></span>)</td>
+    <% end %>
   </tbody>
 </table>

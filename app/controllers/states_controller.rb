@@ -139,6 +139,8 @@ class StatesController < ApplicationController
     @rowflagsum = {}
     @colsum = Hash.new(0)
     @colflagsum = Hash.new(0)
+    @totalsum = 0
+    @totalflagsum = 0
     @issues.keys.each do |u|
       ulist = @issues[u]
       utot = 0
@@ -151,6 +153,8 @@ class StatesController < ApplicationController
       end
       @rowsum[u] = utot
       @rowflagsum[u] = uftot
+      @totalsum += @rowsum[u]
+      @totalflagsum += @rowflagsum[u]
     end
   end
 
