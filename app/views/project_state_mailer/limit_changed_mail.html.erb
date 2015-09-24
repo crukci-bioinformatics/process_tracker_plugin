@@ -1,0 +1,17 @@
+<p>Issue <a href="<%= @url %>"><%= @issue.id %></a>: <%= @issue.subject %></p>
+
+<% if @notes.has_key?(:hours_new) %>
+  <p>"Hours Logged" limit raised to <%= @notes[:hours_new] %> from <%= @notes[:hours_old] %> by <%= @notes[:uname] %>.</p>
+  <p>Hours Logged (actual): <%= @issue.total_spent_hours %></p>
+<% end %>
+
+<% if @notes.has_key?(:timeout_new) %>
+  <p>"State Timeout" limit raised to <%= @notes[:timeout_new] %> from <%= @notes[:timeout_old] %> by <%= @notes[:uname] %>.</p>
+  <p>Days in State (actual): <%= @notes[:days] %> (if "Active", days since last logged time)</p>
+<% end %>
+
+<p>Assigned to: <%= @notes[:assn] %></p>
+
+<p>Tracker: <%= @issue.tracker.name %></p>
+
+<p>State: <%= @issue.state %></p>

@@ -12,7 +12,8 @@ Redmine::Plugin.register :project_state do
   author_url 'http://gdbrown.org/blog/'
 
   settings(:default => { 'root_projects' => 'Research Groups',
-                         'user_groups' => 'Bioinformatics Core' },
+                         'user_groups' => 'Bioinformatics Core',
+                         'alert_logins' => 'brown22' },
            :partial => 'settings/project_state_settings' )
 
   menu :top_menu, :states, { controller: 'states', action: 'index' }, caption: :project_state_caption, before: :help

@@ -7,6 +7,8 @@ en:
   settings_root_projects_descr: "Issues under these root projects will be included in the report (semicolon-separated list)"
   settings_user_groups_label: "User Groups"
   settings_user_groups_descr: "Redmine users in these groups will be included in the report (semicolon-separated list)"
+  settings_alert_logins_label: "Alert Logins"
+  settings_alert_logins_descr: "Redmine logins in this list will receive alert emails when a user increments project state limits (semicolon-separated list)"
 
   flag_days_since_logged_time: "Days since logged time in state %{state}: %{actual} > %{threshold}"
   flag_days_in_state: "Days in state %{state}: %{actual} > %{threshold}"
