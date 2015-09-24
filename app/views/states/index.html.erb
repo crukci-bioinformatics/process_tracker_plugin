@@ -18,7 +18,11 @@
   <tbody>
     <% @users.keys.each do |u| %>
       <tr>
-        <td class="user_counts"><a href="<%= state_path(u) %>"><%= href=@users[u].firstname %></a></td>
+        <% if @stark %>
+          <td class="user_counts"><a href="<%= state_path(u) %>?report=stark"><%= href=@users[u].firstname %></a></td>
+        <% else %>
+          <td class="user_counts"><a href="<%= state_path(u) %>"><%= href=@users[u].firstname %></a></td>
+        <% end %>
         <% @states.each do |s| %>
           <% if @flags[u][s] > 0 %>
             <td class="counts"><%= @issues[u][s] %> (<span class="flagged"><%= @flags[u][s] %></span>)</td>
@@ -34,7 +38,11 @@
       </tr>
     <% end %>
     <tr>
-      <td class="user_counts"><a href="<%= state_path(-1) %>">Unassigned</a></td>
+      <% if @stark %>
+        <td class="user_counts"><a href="<%= state_path(-1) %>?report=stark">Unassigned</a></td>
+      <% else %>
+        <td class="user_counts"><a href="<%= state_path(-1) %>">Unassigned</a></td>
+      <% end %>
       <% @states.each do |s| %>
         <% if @flags[-1][s] > 0 %>
           <td class="counts"><%= @issues[-1][s] %> (<span class="flagged"><%= @flags[-1][s] %></span>)</td>
@@ -63,3 +71,10 @@
     <% end %>
   </tbody>
 </table>
+<p>
+<% if @stark==true %>
+  <a href="/states">The Regular Report</a>
+<% else %>
+  <a href="/states?report=stark">The Stark Report</a>
+<% end %>
+</p>

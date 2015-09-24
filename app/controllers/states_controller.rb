@@ -83,10 +83,12 @@ class StatesController < ApplicationController
     return (get_flags(issue).length > 0)
   end
 
-  def process_project(project,issues,flags)
+  def process_project(project,issues,flags,stark)
     closed = IssueStatus.find_by(name: 'Closed').id
+    stats = Tracker.find_by(name: 'Class I - Statistics').id
     Issue.where(project_id: project.id).find_each do |iss|
       next unless iss.status_id != closed
+      next if stark && iss.tracker_id == stats
       if iss.assigned_to_id.nil?
         issues[-1][iss.state] += 1
       else
@@ -110,6 +112,9 @@ class StatesController < ApplicationController
   end
 
   def index
+    if params[:report] == 'stark'
+      stark = true
+    end
     groups = semiString2List(Setting.plugin_project_state['user_groups'])
     uset = {}
     iset = {}
@@ -126,7 +131,7 @@ class StatesController < ApplicationController
     iset[-1] = Hash.new(0) # for "unassigned" projects
     fset[-1] = Hash.new(0)
     includedProjects.each do |p|
-      process_project(p,iset,fset)
+      process_project(p,iset,fset,stark)
     end
     iset.keys.each do |k|
       uset.delete(k) if iset[k].values.sum == 0
@@ -156,11 +161,16 @@ class StatesController < ApplicationController
       @totalsum += @rowsum[u]
       @totalflagsum += @rowflagsum[u]
     end
+    @stark = stark
   end
 
   def show
     user = params[:id].to_i
+    if params[:report] == 'stark'
+      stark = true
+    end
     closed = IssueStatus.find_by(name: 'Closed').id
+    stats = Tracker.find_by(name: 'Class I - Statistics').id
     projIds = includedProjects.map{|p| p.id}
     
     if user == -1 # unassigned
@@ -169,6 +179,9 @@ class StatesController < ApplicationController
       issue_set = Issue.where(assigned_to_id: user)
     end
     issue_set = issue_set.select{|i| i if (i.status_id != closed) && projIds.include?(i.project_id) }
+    if stark
+      issue_set = issue_set.select{|i| i if i.tracker_id != stats}
+    end
     @issue_hash = Hash.new
     @flags = Hash.new
     issue_set.each do |iss|
