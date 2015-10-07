@@ -1,8 +1,6 @@
-require_dependency File.expand_path(File.dirname(__FILE__)+'/../lib/project_state/defaults')
 require_dependency File.expand_path(File.dirname(__FILE__)+'/../lib/project_state/utils')
 
 class ProjectStatePopulateDb
-  include ProjectStatePlugin::Defaults
   include ProjectStatePlugin::Utilities
 
   def add_to_trackers(cf)
@@ -25,7 +23,7 @@ class ProjectStatePopulateDb
       icf.searchable = true
       icf.default_value = 'Prepare'
       icf.format_store = {"url_pattern"=>"", "edit_tag_style"=>""}
-      icf.description = 'State of a project'
+      icf.description = l(:custom_var_project_state)
     end
 
     nm = 'State Timeout'
@@ -37,7 +35,7 @@ class ProjectStatePopulateDb
       icf.is_filter = true
       icf.default_value = "0"
       icf.format_store = {"url_pattern"=>""}
-      icf.description = 'Number of days after which a flag should be raised'
+      icf.description = l(:custom_var_state_timeout)
     end
 
     nm = 'Hour Limit'
@@ -49,7 +47,7 @@ class ProjectStatePopulateDb
       icf.is_filter = true
       icf.default_value = "0"
       icf.format_store = {"url_pattern"=>""}
-      icf.description = 'Limit on number of hours logged for this issue'
+      icf.description = l(:custom_var_hour_limit)
     end
 
     nm = 'Researcher Email'
@@ -61,7 +59,7 @@ class ProjectStatePopulateDb
       icf.is_for_all = true
       icf.default_value = ""
       icf.format_store = {"text_formatting"=>"", "url_pattern"=>""}
-      icf.description = 'The email address(es) of the researcher(s) who should receive notifications upon state changes (semicolon-separated).'
+      icf.description = l(:custom_var_researcher)
     end
 
     add_to_trackers(ps)
@@ -72,7 +70,7 @@ class ProjectStatePopulateDb
   end
 
   def populate_default_state_timeouts
-    @@state_timeout_defaults.keys.each do |s|
+    ProjectStatePlugin::Defaults::STATE_TIMEOUT_DEFAULTS.keys.each do |s|
       StateTimeoutDefault.find_or_create_by(state: s) do |std|
         STDOUT.printf("State Timeout: %s --> %d\n",s,@@state_timeout_defaults[s])
         std.timeout = @@state_timeout_defaults[s]
@@ -81,7 +79,7 @@ class ProjectStatePopulateDb
   end
 
   def populate_default_hour_limits
-    @@hour_limit_defaults.keys.each do |k|
+    ProjectStatePlugin::Defaults::HOUR_LIMIT_DEFAULTS.keys.each do |k|
       tkset = Tracker.where(name: k)
       if tkset.length != 0
         TimeLimitDefault.find_or_create_by(tracker: tkset[0]) do |tld|

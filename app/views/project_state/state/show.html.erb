@@ -1,0 +1,21 @@
+<% content_for :header_tags do %>
+<%= stylesheet_link_tag 'project_state.css', :plugin => 'project_state', :media => 'all' %>
+<% end %>
+
+<h3><%= l(:project_state_title) %>: <span id="pss_owner"><%= params[:id] %></span></h3>
+
+<table id="ps_report"><tbody>
+
+<% @usort.each do |u| %>
+  <% if u.nil? %>
+    <tr><td id="state_line">Unassigned</td></tr>
+  <% else %>
+    <tr><td id="state_line"><%= @users[u].firstname %></td></tr>
+  <% end %>
+  <tr id="hdr_line"><td>Issue</td><td>Project</td><td>Status</td><td>Subject</td><td>Flags</td></tr>
+  <% @issues[u].each do |iss| %>
+    <%= render :partial => 'issue', :locals => { issue: iss, flags: @flags[iss.id] } %>
+  <% end %>
+<% end %>
+
+</tbody></table>

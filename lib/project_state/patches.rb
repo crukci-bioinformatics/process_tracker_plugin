@@ -75,11 +75,8 @@ module ProjectStatePlugin
           cfid = CustomField.find_by(name: 'Project State').id
           returnval = true
           if u == sol
-            STDERR.printf("checking journal...\n")
             self.details.each do |d|
-              STDERR.printf("checking detail... %s %s\n",d.prop_key,cfid)
               if d.prop_key.to_i == cfid
-                STDERR.printf("checking values %s --> %s ...\n",d.old_value,d.value)
                 returnval = StatesController::ORDERING[d.old_value] < StatesController::ORDERING[d.value]
               end
             end

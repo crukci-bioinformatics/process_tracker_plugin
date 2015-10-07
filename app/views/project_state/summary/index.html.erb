@@ -1,0 +1,84 @@
+<% content_for :header_tags do %>
+<%= stylesheet_link_tag 'project_state.css', :plugin => 'project_state', :media => 'all' %>
+
+<% end %>
+
+<h3><%= l(:project_state_title) %></h3>
+
+<table id="ps_summary">
+  <thead>
+    <tr>
+      <th></th>
+      <% @states.each do |s| %>
+        <% if @stark %>
+          <th><a href="<%= project_state_state_path(s) %>?report=stark"><%= s %></a></th>
+        <% else %>
+          <th><a href="<%= project_state_state_path(s) %>"><%= s %></a></th>
+        <% end %>
+      <% end %>
+      <th>Total</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @usort.each do |u| %>
+      <tr>
+        <% if @stark %>
+          <td class="user_counts"><a href="<%= project_state_user_path(u) %>?report=stark"><%= href=@users[u].firstname %></a></td>
+        <% else %>
+          <td class="user_counts"><a href="<%= project_state_user_path(u) %>"><%= href=@users[u].firstname %></a></td>
+        <% end %>
+        <% @states.each do |s| %>
+          <% if @flags[u][s] > 0 %>
+            <td class="counts"><%= @count[u][s] %> (<span class="flagged"><%= @flags[u][s] %></span>)</td>
+          <% else %>
+            <td class="counts"><%= @count[u][s] %> (<span><%= @flags[u][s] %></span>)</td>
+          <% end %>
+        <% end %>
+        <% if @rowflagsum[u] > 0 %>
+          <td class="rowsum"><%= @rowcountsum[u] %> (<span class="flagged"><%= @rowflagsum[u] %></span>)</td>
+        <% else %>
+          <td class="rowsum"><%= @rowcountsum[u] %> (<span><%= @rowflagsum[u] %></span>)</td>
+        <% end %>
+      </tr>
+    <% end %>
+    <tr>
+      <% if @stark %>
+        <td class="user_counts"><a href="<%= project_state_user_path(-1) %>?report=stark">Unassigned</a></td>
+      <% else %>
+        <td class="user_counts"><a href="<%= project_state_user_path(-1) %>">Unassigned</a></td>
+      <% end %>
+      <% @states.each do |s| %>
+        <% if @flags[nil][s] > 0 %>
+          <td class="counts"><%= @count[nil][s] %> (<span class="flagged"><%= @flags[nil][s] %></span>)</td>
+        <% else %>
+          <td class="counts"><%= @count[nil][s] %> (<span><%= @flags[nil][s] %></span>)</td>
+        <% end %>
+      <% end %>
+      <% if @rowflagsum[nil] > 0 %>
+        <td class="rowsum"><%= @rowcountsum[nil] %> (<span class="flagged"><%= @rowflagsum[nil] %></span>)</td>
+      <% else %>
+        <td class="rowsum"><%= @rowcountsum[nil] %> (<span><%= @rowflagsum[nil] %></span>)</td>
+      <% end %>
+    </tr>
+    <tr><td class="colsum"></td>
+    <% @states.each do |s| %>
+      <% if @colflagsum[s] > 0 %>
+        <td class="colsum"><%= @colcountsum[s] %> (<span class="flagged"><%= @colflagsum[s] %></span>)</td>
+      <% else %>
+        <td class="colsum"><%= @colcountsum[s] %> (<span><%= @colflagsum[s] %></span>)</td>
+      <% end %>
+    <% end %>
+    <% if @totalflagsum > 0 %>
+      <td class="cornersum"><%= @totalsum %> (<span class="flagged"><%= @totalflagsum %></span>)</td>
+    <% else %>
+      <td class="cornersum"><%= @totalsum %> (<span><%= @totalflagsum %></span>)</td>
+    <% end %>
+  </tbody>
+</table>
+<p>
+<% if @stark==true %>
+  <a href="/project_state/summary"><%= l(:regular_report_link) %></a>
+<% else %>
+  <a href="/project_state/summary?report=stark"><%= l(:filter_report_link) %></a>
+<% end %>
+</p>

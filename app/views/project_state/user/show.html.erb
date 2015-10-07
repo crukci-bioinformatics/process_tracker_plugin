@@ -6,7 +6,7 @@
 
 <table id="ps_report"><tbody>
 
-<% StatesController::INTERESTING.each do |st| %>
+<% ProjectStatePlugin::Defaults::INTERESTING.each do |st| %>
   <% next unless @issue_hash.has_key? st %>
   <tr><td id="state_line"><%= st %></td></tr>
   <tr id="hdr_line"><td>Issue</td><td>Project</td><td>Status</td><td>Subject</td><td>Flags</td></tr>

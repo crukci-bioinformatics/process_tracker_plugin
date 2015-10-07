@@ -1,4 +1,5 @@
-# Plugin's routes
-# See: http://guides.rubyonrails.org/routing.html
-
-resources :states, only: [:index, :show]
+namespace :project_state do
+  resources :summary, only: [:index]
+  resources :user, only: [:show]
+  resources :state, only: [:show]
+end

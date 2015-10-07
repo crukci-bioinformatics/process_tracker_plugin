@@ -7,16 +7,17 @@ Redmine::Plugin.register :project_state do
   name 'Project State plugin'
   author 'Gord Brown'
   description 'Track project states, notify if/when various conditions occur'
-  version '1.0.0'
+  version '1.1.0'
   url 'https://github.com/crukci-bioinformatics/process_tracker_plugin'
   author_url 'http://gdbrown.org/blog/'
 
   settings(:default => { 'root_projects' => 'Research Groups',
                          'user_groups' => 'Bioinformatics Core',
-                         'alert_logins' => 'brown22' },
+                         'alert_logins' => 'brown22',
+                         'filter_projects' => 'External; Genomics; Proteomics; Other Core Facilities'},
            :partial => 'settings/project_state_settings' )
 
-  menu :top_menu, :states, { controller: 'states', action: 'index' }, caption: :project_state_caption, before: :help
+  menu :top_menu, :states, { controller: 'project_state/summary', action: 'index' }, caption: :project_state_caption, before: :help
 
 end
 

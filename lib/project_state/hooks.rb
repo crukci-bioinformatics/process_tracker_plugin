@@ -1,9 +1,11 @@
 require 'date'
 require_dependency File.expand_path(File.dirname(__FILE__)+'/utils')
+require_dependency File.expand_path(File.dirname(__FILE__)+'/issue_filter')
 
 module ProjectStatePlugin
   class Hooks < Redmine::Hook::Listener
 
+    include ProjectStatePlugin::IssueFilter
     include ProjectStatePlugin::Utilities
 
     def controller_issues_new_after_save(context={})

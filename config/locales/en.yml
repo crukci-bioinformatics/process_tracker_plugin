@@ -2,6 +2,13 @@
 en:
   project_state_caption: "ProjectStates"
   project_state_title: "Project State Summary"
+  filter_report_link: "High Plains Report"
+  regular_report_link: "The Regular Report"
+
+  custom_var_project_state: "State of a Project"
+  custom_var_state_timeout: "Number of days after which a flag should be raised"
+  custom_var_hour_limit: "Limit on number of hours logged for this issue"
+  custom_var_researcher: "The email address(es) of the researcher(s) who should receive notifications upon state changes (semicolon-separated)"
 
   settings_root_projects_label: "Root Projects"
   settings_root_projects_descr: "Issues under these root projects will be included in the report (semicolon-separated list)"
@@ -9,6 +16,8 @@ en:
   settings_user_groups_descr: "Redmine users in these groups will be included in the report (semicolon-separated list)"
   settings_alert_logins_label: "Alert Logins"
   settings_alert_logins_descr: "Redmine logins in this list will receive alert emails when a user increments project state limits (semicolon-separated list)"
+  settings_filter_projects_label: "Filter Projects"
+  settings_filter_projects_descr: "The 'Rory Report' should only include issues from these projects if they are associated with tracker 'Class I - Analyst'"
 
   flag_days_since_logged_time: "Days since logged time in state %{state}: %{actual} > %{threshold}"
   flag_days_in_state: "Days in state %{state}: %{actual} > %{threshold}"

@@ -8,14 +8,14 @@ module ProjectStatePlugin
     end
 
     def includeProject(parent,pList)
-      pList << parent
+      pList << parent.id
       Project.where(parent_id: parent.id).each do |proj|
         includeProject(proj,pList)
       end
     end
 
-    def includedProjects
-      roots = semiString2List(Setting.plugin_project_state['root_projects'])
+    def collectProjects(names)
+      roots = semiString2List(names)
       projList = Array.new
       roots.each do |root|
         Project.where(name: root).each do |p|
@@ -23,6 +23,15 @@ module ProjectStatePlugin
         end
       end
       return projList
+    end
+
+    def collectIssues(projects)
+      closed = IssueStatus.find_by(name: 'Closed').id
+      interesting = ProjectStatePlugin::Defaults::INTERESTING
+      iss_set = Issue.where.not(status_id: closed)
+                     .where(project_id: projects)
+                     .select{|i| i if interesting.include?(i.state)}
+      return iss_set
     end
 
     def login2email(login)
@@ -34,25 +43,15 @@ module ProjectStatePlugin
       emails = logins.map{|u| login2email(u)}
     end
 
-    def days_in_state(issue)
-      seconds = 60 * 60 * 24
-      j = issue.state_last_changed
-      if j.nil?
-       return 0
+    def url_params(params)
+      parms = {}
+      if params.has_key? :id
+        parms[:id] = params[:id]
       end
-      ch = j.to_i / seconds
-      now = DateTime.now.to_i / seconds
-      interval = now - ch
-      if issue.state == 'Active'
-        begin
-          last_logged = issue.time_entries.order(:spent_on).last.spent_on.to_time.to_i / seconds
-        rescue NoMethodError => e
-          last_logged = 0
-        end
-        log_i = now - last_logged
-        interval = [interval,log_i].min
+      if params[:report] == 'stark'
+        parms[:stark]
       end
-      return interval
+      return parms
     end
   end
 end
