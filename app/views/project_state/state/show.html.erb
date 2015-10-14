@@ -8,11 +8,11 @@
 
 <% @usort.each do |u| %>
   <% if u.nil? %>
-    <tr><td id="state_line">Unassigned</td></tr>
+    <tr><td id="state_line"><%= l(:text_unassigned) %></td></tr>
   <% else %>
     <tr><td id="state_line"><%= @users[u].firstname %></td></tr>
   <% end %>
-  <tr id="hdr_line"><td>Issue</td><td>Project</td><td>Status</td><td>Subject</td><td>Flags</td></tr>
+  <tr id="hdr_line"><td><%= l(:text_issue) %></td><td><%= l(:text_project) %></td><td><%= l(:text_status) %></td><td><%= l(:text_subject) %></td><td><%= l(:text_flags) %></td></tr>
   <% @issues[u].each do |iss| %>
     <%= render :partial => 'issue', :locals => { issue: iss, flags: @flags[iss.id] } %>
   <% end %>

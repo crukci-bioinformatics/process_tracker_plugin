@@ -10,15 +10,12 @@ class ProjectState::UserController < ApplicationController
   unloadable
 
   def show
-    user = params[:id].to_i
+    @user = params[:id] == '-1' ? nil : params[:id].to_i
 
     projects = collectProjects(Setting.plugin_project_state['root_projects'])
     issues = collectIssues(projects)
-    if user == -1 # unassigned
-      issues = issues.select{|i| i if i.assigned_to.nil?}
-    else
-      issues = issues.select{|i| i if i.assigned_to_id == user}
-    end
+    issues = issues.select{|i| i if i.assigned_to_id == @user}
+    
     if params[:report] == 'stark'
       issues = filter_issues(issues)
     end

@@ -26,9 +26,9 @@ module ProjectStatePlugin
     end
 
     def collectIssues(projects)
-      closed = IssueStatus.find_by(name: 'Closed').id
+      closed = IssueStatus.where(is_closed: true)
       interesting = ProjectStatePlugin::Defaults::INTERESTING
-      iss_set = Issue.where.not(status_id: closed)
+      iss_set = Issue.where.not(status: closed)
                      .where(project_id: projects)
                      .select{|i| i if interesting.include?(i.state)}
       return iss_set
@@ -53,5 +53,36 @@ module ProjectStatePlugin
       end
       return parms
     end
+  end
+
+  module Logger
+
+    @@label = "PROJECT_STATE"
+
+    def debug(msg)
+      log = Rails.logger
+      log.tagged(@@label) { log.debug(msg) }
+    end
+
+    def info(msg)
+      log = Rails.logger
+      log.tagged(@@label) { log.info("[%s] %s"%[DateTime.now(),msg]) }
+    end
+
+    def warn(msg)
+      log = Rails.logger
+      log.tagged(@@label) { log.warn("[%s] WARNING: %s"%[DateTime.now(),msg]) }
+    end
+
+    def error(msg)
+      log = Rails.logger
+      log.tagged(@@label) { log.error("[%s] ERROR: %s"%[DateTime.now(),msg]) }
+    end
+
+    def fatal(msg)
+      log = Rails.logger
+      log.tagged(@@label) { log.fatal("[%s] FATAL: %s"%[DateTime.now(),msg]) }
+    end
+
   end
 end

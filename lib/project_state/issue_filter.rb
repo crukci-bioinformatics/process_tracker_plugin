@@ -5,6 +5,7 @@ module ProjectStatePlugin
   module IssueFilter
 
     include ActionView::Helpers::NumberHelper
+    include ProjectStatePlugin::Defaults
     include ProjectStatePlugin::Utilities
 
     def days_in_state(issue)
@@ -31,7 +32,7 @@ module ProjectStatePlugin
     def get_flags(issue)
   
       flags = []
-      if issue.status_id == IssueStatus.find_by(name: 'Closed').id
+      if IssueStatus.where(is_closed: true).include? issue.status
         return flags
       end
   
@@ -66,7 +67,8 @@ module ProjectStatePlugin
       end
   
       # status / state mismatch
-      if ProjectStatePlugin::Defaults::PROJECT_STATE_DEFAULTS[issue.status_id] != issue.state
+      psd = StatusStateMapping.find_by(status: issue.status_id)
+      if !psd.nil? && psd.state != issue.state
         flags << l(:flag_status_state_mismatch,
                    :status => issue.status.name,
                    :state => issue.state)
@@ -80,15 +82,17 @@ module ProjectStatePlugin
     end
 
     def filter_issues(issues)
-      stats = Tracker.find_by(name: 'Class I - Statistics').id
-      anal = Tracker.find_by(name: 'Class I - Analysis').id
+      stat_names = semiString2List(Setting.plugin_project_state['filter_trackers'])
+      stats = Tracker.where(name: stat_names)
+      anal_names = semiString2List(Setting.plugin_project_state['filter_keepers'])
+      anal = Tracker.where(name: anal_names)
       filt_projects = collectProjects(Setting.plugin_project_state['filter_projects'])
 
       # remove "statistics" issues
-      filt = issues.select{|i| i if i.tracker_id != stats}
+      filt = issues.select{|i| i if !(stats.include? i.tracker)}
 
       # only show "analysis" issues if not under "Research Groups"
-      filt = filt.select{|i| i if !(filt_projects.include?(i.project_id)) || i.tracker_id == anal}
+      filt = filt.select{|i| i if !(filt_projects.include?(i.project_id)) || anal.include?(i.tracker)}
 
       return filt
     end

@@ -2,14 +2,14 @@
 <%= stylesheet_link_tag 'project_state.css', :plugin => 'project_state', :media => 'all' %>
 <% end %>
 
-<h3><%= l(:project_state_title) %>: <span id="pss_owner"><%= params[:id] == '-1' ? 'Unassigned' : User.find(params[:id]).firstname %></span></h3>
+<h3><%= l(:project_state_title) %>: <span id="pss_owner"><%= @user.nil? ? l(:text_unassigned) : User.find(params[:id]).firstname %></span></h3>
 
 <table id="ps_report"><tbody>
 
 <% ProjectStatePlugin::Defaults::INTERESTING.each do |st| %>
   <% next unless @issue_hash.has_key? st %>
   <tr><td id="state_line"><%= st %></td></tr>
-  <tr id="hdr_line"><td>Issue</td><td>Project</td><td>Status</td><td>Subject</td><td>Flags</td></tr>
+  <tr id="hdr_line"><td><%= l(:text_issue) %></td><td><%= l(:text_project) %></td><td><%= l(:text_status) %></td><td><%= l(:text_subject) %></td><td><%= l(:text_flags) %></td></tr>
   <% @issue_hash[st].each do |iss| %>
     <%= render :partial => 'issue', :locals => { issue: iss, flags: @flags[iss.id] } %>
   <% end %>

@@ -3,12 +3,12 @@ Issue <%= @issue.id %></a>: <%= @issue.subject %>
 Link: <%= @url %>
 
 <% if @notes.has_key?(:hours_new) %>
-  "Hours Logged" limit raised to <%= @notes[:hours_new] %> from <%= @notes[:hours_old] %> by <%= @notes[:uname] %>.
+  "Hours Logged" limit raised to <%= @notes[:hours_new] %> from <%= @notes[:hours_old].blank? ? "<empty>" : @notes[:hours_old] %> by <%= @notes[:uname] %>.
   Hours Logged (actual): <%= @issue.total_spent_hours %>
 <% end %>
 
 <% if @notes.has_key?(:timeout_new) %>
-  "State Timeout" limit raised to <%= @notes[:timeout_new] %> from <%= @notes[:timeout_old] %> by <%= @notes[:uname] %>.
+  "State Timeout" limit raised to <%= @notes[:timeout_new] %> from <%= @notes[:timeout_old].blank? ? "<empty>" : @notes[:timeout_old] %> by <%= @notes[:uname] %>.
   Days in State (actual): <%= @notes[:days] %> (if "Active", days since last logged time)
 <% end %>
 

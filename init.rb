@@ -7,14 +7,16 @@ Redmine::Plugin.register :project_state do
   name 'Project State plugin'
   author 'Gord Brown'
   description 'Track project states, notify if/when various conditions occur'
-  version '1.1.0'
+  version '1.1.1'
   url 'https://github.com/crukci-bioinformatics/process_tracker_plugin'
   author_url 'http://gdbrown.org/blog/'
 
   settings(:default => { 'root_projects' => 'Research Groups',
-                         'user_groups' => 'Bioinformatics Core',
                          'alert_logins' => 'brown22',
-                         'filter_projects' => 'External; Genomics; Proteomics; Other Core Facilities'},
+                         'filter_trackers' => 'Class I - Statistics',
+                         'filter_projects' => 'External; Genomics; Proteomics; Other Core Facilities',
+                         'filter_keepers' => 'Class I - Analysis',
+                         'ignore_trackers' => 'Bug; Feature; Support; Other'},
            :partial => 'settings/project_state_settings' )
 
   menu :top_menu, :states, { controller: 'project_state/summary', action: 'index' }, caption: :project_state_caption, before: :help
@@ -26,10 +28,11 @@ Rails.configuration.after_initialize do
   Project.send(:include,ProjectStatePlugin::ProjectPatch)
   CustomValue.send(:include,ProjectStatePlugin::CustomValuePatch)
   Journal.send(:include,ProjectStatePlugin::JournalPatch)
-  initr = ProjectStatePlugin::Initializer.new
   # the following steps are necessary in case the "root_projects" variable
   # has been altered... may need to add new projects to the custom fields,
   # and if so, add default CustomField values to issues
-  initr.addCustomFieldsToProjects
-  initr.addCustomFieldsToIssues
+  initr = ProjectStatePlugin::Initializer.new
+  initr.ensure_custom_fields # ensure custom fields are present (should only need to be created once)
+  projSet = initr.ensure_projects_have_custom_fields
+  initr.ensure_issues_have_custom_fields(projSet)
 end

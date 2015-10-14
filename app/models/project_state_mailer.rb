@@ -1,5 +1,6 @@
 class ProjectStateMailer < ActionMailer::Base
 
+  include Redmine::I18n
   include ProjectStatePlugin::Utilities
 
   default from: "redmine-notlistening@cruk.cam.ac.uk"
@@ -12,12 +13,14 @@ class ProjectStateMailer < ActionMailer::Base
     begin
       subs = []
       if notes.has_key?(:hours_new)
-        subs << "Hour limit #{notes[:hours_old]} --> #{notes[:hours_new]}"
+        subs << l(:email_hour_limit_subj,:hours_old => notes[:hours_old],
+                                         :hours_new => notes[:hours_new])
       end
       if notes.has_key?(:timeout_new)
-        subs << "State timeout #{notes[:timeout_old]} --> #{notes[:timeout_new]}"
+        subs << l(:email_state_timeout_subj,:timeout_old => notes[:timeout_old],
+                                            :timeout_new => notes[:timeout_new])
       end
-      sub = "Issue #{issue.id}: " + subs.join(', ')
+      sub = l(:text_issue) + " #{issue.id}: " + subs.join(', ')
       mail(to: notes[:email], subject: sub)
     rescue Exception => e
       STDERR.printf("%s\n",e)

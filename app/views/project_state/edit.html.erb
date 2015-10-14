@@ -1,0 +1,66 @@
+<% content_for :header_tags do %>
+<%= stylesheet_link_tag 'project_state.css', :plugin => 'project_state', :media => 'all' %>
+<% end %>
+
+<h3><%= l(:conf_title) %></h3>
+<%= form_tag("/project_state/configure",method: "post") do %>
+<div class="ps_content_left">
+
+<div class="ps_table_border">
+<h4 class="ps_header"><%= l(:conf_tracker_title) %></h4>
+<table class="ps_configure">
+  <tbody>
+<% @torder.each do |tid| %>
+    <tr><td class="ps_label"><%= label_tag(tid,@trackers[tid].name) %>: </td>
+        <% if @is_admin %>
+          <td><%= text_field_tag(tid,value=@tracker2hours[tid]) %></td>
+        <% else %>
+          <td><%= label_tag(tid,@tracker2hours[tid]) %></td>
+        <% end %>
+    </tr>
+<% end %>
+  </tbody>
+</table>
+</div>
+
+<div class="ps_table_border">
+<h4 class="ps_header"><%= l(:conf_state_timeout) %></h4>
+<table class="ps_configure">
+  <tbody>
+  <% @state_order.each do |s| %>
+    <tr><td class="ps_label"><%= label_tag(s,@states[s]) %>: </td>
+        <% if @is_admin %>
+          <td><%= text_field_tag(s,value=@state2days[s]) %></td>
+        <% else %>
+          <td><%= label_tag(s,@state2days[s]) %></td>
+        <% end %>
+    </tr>
+  <% end %>
+  </tbody>
+</table>
+</div>
+<% if @is_admin %>
+  <p><%= submit_tag(l(:text_save)) %></p>
+<% end %>
+
+</div>
+
+<div class="ps_content_left">
+<div class="ps_table_border">
+<h4 class="ps_header"><%= l(:conf_status_state_map) %></h4>
+<table class="ps_configure">
+  <tbody>
+  <% @sorder.each do |stat| %>
+    <tr><td class="ps_label"><%= label_tag(@status_tags[stat],@statuses[stat].name) %>: </td>
+      <% if @is_admin %>
+        <td><%= select_tag(@status_tags[stat],options_for_select(@state_options,@status2state[stat])) %></td></tr>
+      <% else %>
+        <td><%= label_tag(@status_tags[stat],@status2state[stat]) %></td>
+      <% end %>
+    </tr>
+  <% end %>
+  </tbody>
+</table>
+</div>
+</div>
+<% end %>

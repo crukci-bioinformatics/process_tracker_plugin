@@ -5,15 +5,17 @@ require_dependency File.expand_path(File.dirname(__FILE__)+'/issue_filter')
 module ProjectStatePlugin
   class Hooks < Redmine::Hook::Listener
 
+    include Redmine::I18n
+    include ProjectStatePlugin::Defaults
     include ProjectStatePlugin::IssueFilter
     include ProjectStatePlugin::Utilities
 
     def controller_issues_new_after_save(context={})
-      psid = CustomField.find_by(name: 'Project State').id
+      psid = CustomField.find_by(name: CUSTOM_PROJECT_STATE).id
       iss = context[:issue]
       cf = iss.custom_values.where(custom_field_id: psid)
-      stid = CustomField.find_by(name: 'State Timeout')
-      hlid = CustomField.find_by(name: 'Hour Limit')
+      stid = CustomField.find_by(name: CUSTOM_STATE_TIMEOUT)
+      hlid = CustomField.find_by(name: CUSTOM_HOUR_LIMIT)
       context[:issue].custom_values.each do |cval|
         if cval.custom_field_id == stid.id
           if cf.length > 0
@@ -33,9 +35,9 @@ module ProjectStatePlugin
       j = context[:journal]
       iss = context[:issue]
       if !j.nil? && j.journalized_type == 'Issue'
-        psid = CustomField.find_by(name: 'Project State').id
-        hlid = CustomField.find_by(name: 'Hour Limit').id
-        stid = CustomField.find_by(name: 'State Timeout').id
+        psid = CustomField.find_by(name: CUSTOM_PROJECT_STATE).id
+        hlid = CustomField.find_by(name: CUSTOM_HOUR_LIMIT).id
+        stid = CustomField.find_by(name: CUSTOM_STATE_TIMEOUT).id
         info = {}
         j.details.each do |jd|
           if jd.property == 'cf' && jd.prop_key == psid.to_s
@@ -85,7 +87,7 @@ module ProjectStatePlugin
             info[:days] = days_in_state(iss)
             a = iss.assigned_to
             if a.nil?
-              info[:assn] = "Unassigned"
+              info[:assn] = l(:text_unassigned)
             else
               info[:assn] = "#{a.firstname} #{a.lastname}"
             end

@@ -1,15 +1,26 @@
+<p><%= l(:settings_help_text_top) %></p>
 <p><label for='settings_root_projects'><span title="<%= l(:settings_root_projects_descr) %>"><%= l(:settings_root_projects_label) %></span></label>
    <%= text_field_tag 'settings[root_projects]', @settings['root_projects'] %>
-</p>
-
-<p><label for='settings_user_groups'><span title="<%= l(:settings_user_groups_descr) %>"><%= l(:settings_user_groups_label) %></span></label>
-   <%= text_field_tag 'settings[user_groups]', @settings['user_groups'] %>
 </p>
 
 <p><label for='settings_alert_logins'><span title="<%= l(:settings_alert_logins_descr) %>"><%= l(:settings_alert_logins_label) %></span></label>
    <%= text_field_tag 'settings[alert_logins]', @settings['alert_logins'] %>
 </p>
 
+<p><label for='settings_filter_trackers'><span title="<%= l(:settings_filter_trackers_descr) %>"><%= l(:settings_filter_trackers_label) %></span></label>
+   <%= text_field_tag 'settings[filter_trackers]', @settings['filter_trackers'] %>
+</p>
+
 <p><label for='settings_filter_projects'><span title="<%= l(:settings_filter_projects_descr) %>"><%= l(:settings_filter_projects_label) %></span></label>
    <%= text_field_tag 'settings[filter_projects]', @settings['filter_projects'] %>
 </p>
+
+<p><label for='settings_filter_keepers'><span title="<%= l(:settings_filter_keepers_descr) %>"><%= l(:settings_filter_keepers_label) %></span></label>
+   <%= text_field_tag 'settings[filter_keepers]', @settings['filter_keepers'] %>
+</p>
+
+<p><label for='settings_ignore_trackers'><span title="<%= l(:settings_ignore_trackers_descr) %>"><%= l(:settings_ignore_trackers_label) %></span></label>
+   <%= text_field_tag 'settings[ignore_trackers]', @settings['ignore_trackers'] %>
+</p>
+
+<p><a href="/project_state/configure"><%= l(:conf_link) %></a></p>

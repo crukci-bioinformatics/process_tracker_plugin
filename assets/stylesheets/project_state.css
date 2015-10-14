@@ -16,3 +16,10 @@ table#ps_report td#state_line { font-weight: bold; font-size: 120%; background: 
 table#ps_report tr#hdr_line { font-weight: bold; font-size: 75%; background: #FFF;  }
 
 span#pss_owner { font-size: 150%; }
+
+table.ps_configure td.ps_label { text-align: right; }
+table.ps_configure td.ps_value { text-align: left; }
+
+.ps_content_left{float:left; }
+.ps_table_border { border-style: solid; border-width: 1px; border-color: #BBB; margin: 3px; padding: 3px; }
+h4.ps_header { margin-top: 20px; }

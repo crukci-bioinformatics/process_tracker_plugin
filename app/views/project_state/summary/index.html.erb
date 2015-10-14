@@ -1,6 +1,5 @@
 <% content_for :header_tags do %>
 <%= stylesheet_link_tag 'project_state.css', :plugin => 'project_state', :media => 'all' %>
-
 <% end %>
 
 <h3><%= l(:project_state_title) %></h3>
@@ -43,9 +42,9 @@
     <% end %>
     <tr>
       <% if @stark %>
-        <td class="user_counts"><a href="<%= project_state_user_path(-1) %>?report=stark">Unassigned</a></td>
+        <td class="user_counts"><a href="<%= project_state_user_path(-1) %>?report=stark"><%= l(:text_unassigned) %></a></td>
       <% else %>
-        <td class="user_counts"><a href="<%= project_state_user_path(-1) %>">Unassigned</a></td>
+        <td class="user_counts"><a href="<%= project_state_user_path(-1) %>"><%= l(:text_unassigned) %></a></td>
       <% end %>
       <% @states.each do |s| %>
         <% if @flags[nil][s] > 0 %>
