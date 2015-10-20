@@ -1,6 +1,7 @@
 # English strings go here for Rails i18n
 en:
   project_state_caption: "ProjectStates"
+  project_my_state_caption: "MyStates"
   project_state_title: "Project State Summary"
   filter_report_link: "A Fistful of Reports"
   regular_report_link: "The Regular Report"

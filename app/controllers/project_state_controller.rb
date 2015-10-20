@@ -135,4 +135,9 @@ class ProjectStateController < ApplicationController
     
   end
 
+#  def show
+#    @user = User.current
+#    redirect_to "/project_state/user/%d" % @user.id
+#  end
+
 end

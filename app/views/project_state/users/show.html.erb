@@ -2,7 +2,7 @@
 <%= stylesheet_link_tag 'project_state.css', :plugin => 'project_state', :media => 'all' %>
 <% end %>
 
-<h3><%= l(:project_state_title) %>: <span id="pss_owner"><%= @user.nil? ? l(:text_unassigned) : User.find(params[:id]).firstname %></span></h3>
+<h3><%= l(:project_state_title) %>: <span id="pss_owner"><%= @user.nil? ? l(:text_unassigned) : User.find(@user).firstname %></span></h3>
 
 <table id="ps_report"><tbody>
 

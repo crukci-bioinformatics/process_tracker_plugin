@@ -2,7 +2,7 @@ require 'date'
 require 'project_state/utils'
 require 'project_state/issue_filter'
 
-class ProjectState::UserController < ApplicationController
+class ProjectState::UsersController < ApplicationController
   include ProjectStatePlugin::Utilities
   include ProjectStatePlugin::IssueFilter
 
@@ -10,7 +10,13 @@ class ProjectState::UserController < ApplicationController
   unloadable
 
   def show
-    @user = params[:id] == '-1' ? nil : params[:id].to_i
+    if ! params.has_key? :id
+      @user = User.current.id
+      warn("Setting user to %d" % @user)
+    else
+      @user = params[:id] == '-1' ? nil : params[:id].to_i
+      warn("User defined as %d" % @user)
+    end
 
     projects = collectProjects(Setting.plugin_project_state['root_projects'])
     issues = collectIssues(projects)

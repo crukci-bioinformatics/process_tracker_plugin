@@ -19,7 +19,8 @@ Redmine::Plugin.register :project_state do
                          'ignore_trackers' => 'Bug; Feature; Support; Other'},
            :partial => 'settings/project_state_settings' )
 
-  menu :top_menu, :states, { controller: 'project_state/summary', action: 'index' }, caption: :project_state_caption, before: :help
+  menu :top_menu, :ps_user, '/project_state/user', caption: :project_my_state_caption, after: :projects
+  menu :top_menu, :states, { controller: 'project_state/summary', action: 'index' }, caption: :project_state_caption, after: :mystates
 
 end
 
@@ -34,5 +35,5 @@ Rails.configuration.after_initialize do
   initr = ProjectStatePlugin::Initializer.new
   initr.ensure_custom_fields # ensure custom fields are present (should only need to be created once)
   projSet = initr.ensure_projects_have_custom_fields
-  initr.ensure_issues_have_custom_fields(projSet)
+#  initr.ensure_issues_have_custom_fields(projSet)
 end
