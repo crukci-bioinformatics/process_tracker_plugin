@@ -40,5 +40,5 @@ Rails.configuration.after_initialize do
   initr.ensure_custom_fields # ensure custom fields are present (should only need to be created once)
   projSet = initr.ensure_projects_have_custom_fields
   initr.populate_reports
-#  initr.ensure_issues_have_custom_fields(projSet)
+  initr.ensure_issues_have_custom_fields(projSet)
 end

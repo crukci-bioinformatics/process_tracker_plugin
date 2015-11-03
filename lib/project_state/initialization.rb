@@ -11,7 +11,11 @@ module ProjectStatePlugin
     include ProjectStatePlugin::Logger
 
     def add_to_trackers(cf)
-      omit = Tracker.where(name: semiString2List(Setting.plugin_project_state['ignore_trackers']))
+      begin
+        omit = Tracker.where(name: semiString2List(Setting.plugin_project_state['ignore_trackers']))
+      rescue
+        return
+      end
       Tracker.all.each do |t|
         if cf.trackers.include? t
           if omit.include? t
