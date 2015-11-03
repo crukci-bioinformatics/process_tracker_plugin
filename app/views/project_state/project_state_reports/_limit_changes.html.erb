@@ -1,0 +1,22 @@
+<h3><%= l(:report_limit_changes) %></h3>
+
+<table id="ps_limit_changes">
+  <thead>
+    <tr><th>Who</th><th>When</th><th>What</th><th>From</th><th>To</th><th>State</th><th>Project</th><th>Issue</th><th>Description</th></tr>
+  </thead>
+  <tbody>
+    <% @records.each do |r| %>
+      <tr>
+        <td><%= r[:user].firstname %></td>
+        <td><%= r[:when] %></td>
+        <td><%= r[:field] %></td>
+        <td><%= r[:from] %></td>
+        <td><%= r[:to] %></td>
+        <td><%= r[:state] %></td>
+        <td><a href="<%= project_url(r[:pid]) %>"><%= r[:project] %></a></td>
+        <td><a href="<%= issue_url(r[:issue]) %>"><%= r[:issue] %></a></td>
+        <td><%= r[:description] %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

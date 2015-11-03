@@ -1,0 +1,29 @@
+<% content_for :header_tags do %>
+<%= stylesheet_link_tag 'project_state.css', :plugin => 'project_state', :media => 'all' %>
+<% end %>
+
+<h3><%= l(:bank_holidays_title) %></h3>
+
+<p>
+<table id="ps_holidays">
+  <tbody>
+    <% oldyear = 0 %>
+    <% @holidays.each do |h| %>
+      <% if h.holiday.year != oldyear %>
+        <% oldyear = h.holiday.year %>
+        <tr><td span=4 class="ps_holiday_year"><%= h.holiday.year %>:</td></tr>
+      <% end %>
+      <tr>
+        <td><%= h.holiday.strftime("%b %-d") %></td>
+        <td><%= Date::DAYNAMES[h.holiday.wday] %></td>
+        <td><%= h.name %></td>
+        <td><%= h.notes%></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+</p>
+
+<p>
+<%= l(:bank_holidays_descr) %>
+</p>

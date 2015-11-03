@@ -1,0 +1,6 @@
+<div id="project_state_form">
+  <%= form_for([:project_state, @report], method: 'patch') do %>
+  year: <%= text_field_tag(:year,value=@year,options={size: 6}) %>
+  <%= submit_tag(l(:report_submit)) %>
+  <% end %>
+</div>

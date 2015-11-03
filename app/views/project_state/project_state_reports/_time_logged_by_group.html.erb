@@ -1,0 +1,66 @@
+<script>
+var chart = new Highcharts.Chart({
+        chart: {
+            renderTo: 'chart_container'
+        },
+        title: {
+            text: '<%= @report.name + ": #{@intervaltitle}" %>'
+        },
+        xAxis: {
+            categories: <%=raw @labels %>
+        },
+        yAxis: {
+            title: {
+                text: '<%= l(:report_bygroup_yaxis) %>'
+            }
+        },
+        series: [
+          <% @pids.each do |pid| %>
+            { name: '<%= @projects[pid].name %>',
+              data: <%= @times[pid] %>,
+              visible: <% if @times[pid].sum < @threshold %>false<% else %>true<% end %>
+            }<% if pid != @pids[-1] %>,<% end %>
+          <% end %>
+        ],
+        exporting: {
+           chartOptions: {
+                plotOptions: {
+                    series: {
+                        dataLabels: {
+                            enabled: true
+                        }
+                    }
+                }
+            },
+            scale: 3,
+           fallbackToExportServer: false
+       }
+
+});
+</script>
+
+<h3>Tabular View</h3>
+
+<table id="ps_counts">
+  <thead>
+    <tr>
+      <th></th>
+      <% @labels.each do |m| %><th><%= m %></th><% end %>
+      <th>Total</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @pids.each do |pid| %>
+      <% total = @times[pid].sum %>
+      <% if total > 0 %>
+      <tr>
+        <td><%= @projects[pid].name %></td>
+        <% @times[pid].each do |t| %>
+          <td class="counts"><%= t %></td>
+        <% end %>
+        <td class="rowsum"><%= total %></td>
+      </tr>
+      <% end %>
+    <% end %>
+  </tbody>
+</table>

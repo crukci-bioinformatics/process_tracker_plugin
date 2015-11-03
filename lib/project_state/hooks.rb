@@ -13,16 +13,22 @@ module ProjectStatePlugin
     def controller_issues_new_after_save(context={})
       psid = CustomField.find_by(name: CUSTOM_PROJECT_STATE).id
       iss = context[:issue]
-      cf = iss.custom_values.where(custom_field_id: psid)
+      cf = iss.custom_values.find_by(custom_field_id: psid)
+      journal = Journal.create(journalized_id: iss.id,
+                               journalized_type: 'Issue',
+                               user: User.current,
+                               created_on: DateTime.now,
+                               private_notes: 0) do |je|
+        je.details << JournalDetail.new(property: 'cf',
+                                        prop_key: psid.to_s,
+                                        old_value: 'new',
+                                        value: cf.value)
+      end
       stid = CustomField.find_by(name: CUSTOM_STATE_TIMEOUT)
       hlid = CustomField.find_by(name: CUSTOM_HOUR_LIMIT)
       context[:issue].custom_values.each do |cval|
         if cval.custom_field_id == stid.id
-          if cf.length > 0
-            cval.value = StateTimeoutDefault.find_by(state: cf[0].value).timeout.to_s
-          elsif
-            cval.value = StateTimeoutDefault.find_by(state: 'Prepare').timeout.to_s
-          end
+          cval.value = StateTimeoutDefault.find_by(state: cf.value).timeout.to_s
           cval.save
         elsif cval.custom_field_id == hlid.id
           cval.value = TimeLimitDefault.find_by(tracker_id: iss.tracker_id).hours.to_s
@@ -82,7 +88,8 @@ module ProjectStatePlugin
           alist = alert_emails
           u = User.current
           uaddr = u.email_address.address
-          if !(alist.include?(uaddr))
+          alist.delete(uaddr)
+          if alist.length > 0
             info[:uname] = "#{u.firstname} #{u.lastname}"
             info[:days] = days_in_state(iss)
             a = iss.assigned_to

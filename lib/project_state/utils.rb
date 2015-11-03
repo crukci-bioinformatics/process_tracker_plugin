@@ -53,6 +53,51 @@ module ProjectStatePlugin
       end
       return parms
     end
+
+    def workdays(u)
+      cf = UserCustomField.find_by(name: 'Working Week')
+      cv = CustomValue.find_by(customized: u, custom_field: cf)
+      if cv.nil?
+        cv = cf.default_value
+      else
+        cv = cv.value
+      end
+      days = {}
+      cv.split(";").each do |dv|
+        (a,b) = dv.split(":")
+        days[Date::ABBR_DAYNAMES.find_index(a)] = b.to_f
+      end
+      return days
+    end
+
+    def working_hours(day,dmap,interval='by_month')
+      # returns number of working hours in period that includes this day
+      # recognized periods are "by_week", "by_month", "by_quarter"
+      case interval
+      when 'by_week'
+        first = day - day.wday
+        last = first + 7
+      when 'by_month'
+        first = day.beginning_of_month
+        last = first.next_month
+      when 'by_quarter'
+        first = day.beginning_of_quarter
+        last = day.end_of_quarter + 1
+      else
+        $pslog.error{"Illegal interval '#{interval}', cannot continue."}
+        abort("Goodbye...")
+      end
+      bh = BankHoliday.where(holiday: first..(last-1)).length * ProjectStatePlugin::Defaults::HOURS_PER_DAY
+      d = first
+      wh = 0
+      while d < last
+        wh += dmap[d.wday] if dmap.has_key? d.wday
+        d += 1
+      end
+      wh -= bh
+      return wh
+    end
+
   end
 
   module Logger

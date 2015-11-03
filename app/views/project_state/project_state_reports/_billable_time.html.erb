@@ -1,0 +1,63 @@
+<script>
+var chart = new Highcharts.Chart({
+        chart: {
+            renderTo: 'chart_container'
+        },
+        title: {
+            text: '<%= @report.name + ": #{@intervaltitle}" %>'
+        },
+        xAxis: {
+            categories: <%=raw @labels %>
+        },
+        yAxis: {
+            title: {
+                text: '<%= l(:report_billable_time_yaxis) %>'
+            }
+        },
+        series: [
+          <% @uids.each do |u| %>
+            { name: '<%= @users[u].firstname %>',
+              data: <%= @frac[u] %>,
+              visible: <% if @frac[u].sum > 0 %>true<% else %>false<% end %>
+            }<% if u != @uids[-1] %>,<% end %>
+          <% end %>
+        ],
+        exporting: {
+           chartOptions: {
+                plotOptions: {
+                    series: {
+                        dataLabels: {
+                            enabled: true
+                        }
+                    }
+                }
+            },
+            scale: 3,
+           fallbackToExportServer: false
+       }
+
+});
+</script>
+
+<h3>Tabular View</h3>
+
+<table id="ps_counts">
+  <thead>
+    <tr>
+      <th></th>
+      <% @labels.each do |m| %><th><%= m %></th><% end %>
+    </tr>
+  </thead>
+  <tbody>
+    <% @uids.each do |u| %>
+      <% if @frac[u].sum > 0 %>
+      <tr>
+        <td><%= @users[u].firstname %></td>
+        <% @frac[u].each do |t| %>
+          <td class="counts"><%= t %></td>
+        <% end %>
+      </tr>
+      <% end %>
+    <% end %>
+  </tbody>
+</table>

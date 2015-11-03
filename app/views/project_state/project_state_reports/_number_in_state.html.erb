@@ -1,0 +1,64 @@
+<script>
+var chart = new Highcharts.Chart({
+        chart: {
+            renderTo: 'chart_container'
+        },
+        title: {
+            text: '<%= @report.name + ": #{@intervaltitle}" %>'
+        },
+        xAxis: {
+            categories: <%=raw @labels %>
+        },
+        yAxis: {
+            title: {
+                text: '<%= l(:report_bygroup_yaxis) %>'
+            }
+        },
+        series: [
+          <% ProjectStatePlugin::Defaults::INTERESTING.each do |s| %>
+            <% if s != 'Post' %>
+            { name: '<%= s %>',
+              data: <%= @counts[s] %>,
+            }<% if s != ProjectStatePlugin::Defaults::INTERESTING[-1] %>,<% end %>
+            <% end %>
+          <% end %>
+        ],
+        exporting: {
+           chartOptions: {
+                plotOptions: {
+                    series: {
+                        dataLabels: {
+                            enabled: true
+                        }
+                    }
+                }
+            },
+            scale: 3,
+           fallbackToExportServer: false
+       }
+
+});
+</script>
+
+<h3>Tabular View</h3>
+
+<table id="ps_counts">
+  <thead>
+    <tr>
+      <th></th>
+      <% @labels.each do |m| %><th><%= m %></th><% end %>
+    </tr>
+  </thead>
+  <tbody>
+    <% ProjectStatePlugin::Defaults::INTERESTING.each do |s| %>
+      <% if s != 'Post' %>
+      <tr>
+        <td><%= s %></td>
+        <% @counts[s].each do |t| %>
+          <td class="counts"><%= t %></td>
+        <% end %>
+      </tr>
+      <% end %>
+    <% end %>
+  </tbody>
+</table>

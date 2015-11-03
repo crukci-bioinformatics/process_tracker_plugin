@@ -8,6 +8,8 @@ module ProjectStatePlugin
     CUSTOM_RESEARCHER_EMAIL = "Researcher Email"
     CUSTOM_ANALYST = "Analyst"
 
+    HOURS_PER_DAY = 7
+
     INTERESTING = ['Prepare','Submit','Ready','Active','Hold','Post']
 
     ORDERING = {'Ongoing' => 0,

@@ -1,0 +1,28 @@
+<% content_for :header_tags do %>
+<%= stylesheet_link_tag 'project_state.css', :plugin => 'project_state', :media => 'all' %>
+<%= javascript_include_tag 'standalone-framework.js', :plugin => 'project_state' %>
+<%= javascript_include_tag 'highcharts.js', :plugin => 'project_state' %>
+<%= javascript_include_tag 'exporting.js', :plugin => 'project_state' %>
+<%= javascript_include_tag 'offline-exporting.js', :plugin => 'project_state' %>
+<script>
+  Highcharts.setOptions({
+    global: {
+      canvasToolsURL: "/plugin_assets/project_state/javascripts/canvas-tools.js"
+    },
+    colors: ['#7cb5ec', '#434348', '#90ed7d', '#f7a35c',
+            '#8085e9', '#f15c80', '#e4d354', '#2b908f', '#f45b5b']
+  });
+</script>
+<% end %>
+
+<h3><%= l(:project_reports_title)%>: <%= @report.name %></h3>
+
+<%= render partial: @report.dateview %>
+
+<% if @make_plot %>
+<div id="chart_container" style="width:100%; height:400px;"></div>
+<% end %>
+
+<% if @okay %>
+  <%= render partial: @report.view %>
+<% end %>

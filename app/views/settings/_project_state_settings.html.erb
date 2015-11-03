@@ -23,4 +23,12 @@
    <%= text_field_tag 'settings[ignore_trackers]', @settings['ignore_trackers'] %>
 </p>
 
+<p><label for='settings_holiday_url'><span title="<%= l(:settings_holiday_url_descr) %>"><%= l(:settings_holiday_url_label) %></span></label>
+   <%= text_field_tag 'settings[holiday_url]', @settings['holiday_url'] %>
+</p>
+
+<p><label for='settings_log_file'><span title="<%= l(:settings_log_file_descr) %>"><%= l(:settings_log_file_label) %></span></label>
+   <%= text_field_tag 'settings[log_file]', @settings['log_file'] %>
+</p>
+
 <p><a href="/project_state/configure"><%= l(:conf_link) %></a></p>

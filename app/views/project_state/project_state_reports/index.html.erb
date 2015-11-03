@@ -1,0 +1,9 @@
+<% content_for :header_tags do %>
+<%= stylesheet_link_tag 'project_state.css', :plugin => 'project_state', :media => 'all' %>
+<% end %>
+
+<h3><%= l(:project_reports_title) %></h3>
+
+<% @reports.each do |rep| %>
+  <p><%= link_to rep.name, [:project_state, rep], action: :show %></p>
+<% end %>

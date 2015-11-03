@@ -1,0 +1,29 @@
+<div id="project_state_date_form">
+  <%= form_for([:project_state, @report], method: 'patch') do %>
+  <fieldset>
+    <div><div><%= radio_button_tag :date_type, '1', (@params['date_type']=='1' || (! @params.has_key?('date_type'))) %>
+         <label class="noblock" for=:date_type_1><%= l(:report_date_type_fixed) %></label></div>
+         <%= select_tag(:period_type, options_for_select(@periods,@params['period_type'])) %>
+    </div>
+    <div><%= radio_button_tag :date_type, '2', @params['date_type']=='2' %>
+         <label class="noblock" for=:date_type_2><%= l(:report_date_type_open) %></label>
+         <label for=:report_date_from><%= l(:report_date_from) %></label>
+         <%= text_field_tag :report_date_from, value=@params['report_date_from'],  options={size: 10} %><%= calendar_for(:report_date_from) %>
+         <label for='report_date_to'><%= l(:report_date_to) %></label>
+         <%= text_field_tag :report_date_to, value=@params['report_date_to'], options={size: 10} %><%= calendar_for(:report_date_to) %>
+    </div>
+    <% if @report.want_interval %>
+      <div>
+        <label><%= l(:label_interval_type) %></label>
+        <%= select_tag(:interval_type, options_for_select(@intervals,@params['interval_type'])) %>
+      </div>
+    <% end %>
+    <div>
+      <%= submit_tag(l(:report_submit)) %>
+    </div>
+    <div>
+      <p><%=raw l(:report_date_interpretation) %></p>
+    </div>
+  </fieldset>
+  <% end %>
+</div>

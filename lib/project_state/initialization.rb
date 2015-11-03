@@ -1,3 +1,5 @@
+require 'logger'
+
 require_dependency File.expand_path(File.dirname(__FILE__)+'/utils')
 
 module ProjectStatePlugin
@@ -153,6 +155,47 @@ module ProjectStatePlugin
       
         end
       end
+    end
+
+    def populate_reports
+      begin
+        ProjectStateReport.find_or_create_by(name: "Percent Billable Time") do |ps|
+          info("Creating Percent Billable Time Report")
+          ps.ordering = 1
+          ps.view = "billable_time"
+          ps.dateview = 'form_dates'
+          ps.want_interval = true
+        end
+        ProjectStateReport.find_or_create_by(name: "Logged Time by Group") do |ps|
+          info("Creating Logged Time by Group Report")
+          ps.ordering = 2
+          ps.view = "time_logged_by_group"
+          ps.dateview = 'form_dates'
+          ps.want_interval = true
+        end
+        ProjectStateReport.find_or_create_by(name: "Limit Changes") do |ps|
+          info("Creating Limit Changes Report")
+          ps.ordering = 3
+          ps.view = "limit_changes"
+          ps.dateview = 'form_dates'
+          ps.want_interval = false
+        end
+        ProjectStateReport.find_or_create_by(name: "Number in State") do |ps|
+          info("Creating Number In State Report")
+          ps.ordering = 4
+          ps.view = "number_in_state"
+          ps.dateview = 'form_dates'
+          ps.want_interval = true
+        end
+      rescue
+        debug("Populate reports later.")
+      end
+    end
+
+    def init_logger
+      logfile = Setting.plugin_project_state['log_file']
+      $pslog = ::Logger.new(logfile,10,10000000)
+      $pslog.level = ::Logger::DEBUG
     end
 
   end

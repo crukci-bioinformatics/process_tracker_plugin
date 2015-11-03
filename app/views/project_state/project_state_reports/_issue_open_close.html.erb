@@ -1,0 +1,39 @@
+<script>
+var chart = new Highcharts.Chart({
+        chart: {
+            renderTo: 'chart_container'
+        },
+        title: {
+            text: '<%= @report.name + ": #{@year}" %>'
+        },
+        xAxis: {
+            categories: <%=raw @months %>
+        },
+        yAxis: {
+            title: {
+                text: '<%= l(:report_issue_open_close_yaxis) %>'
+            }
+        },
+        series: [
+          <% @cases.each do |c| %>
+            { name: '<%= c %>',
+              data: <%= @data[c] %> }<% if c != @cases[-1] %>,<% end %>
+          <% end %>
+        ],
+        exporting: {
+           chartOptions: {
+                plotOptions: {
+                    series: {
+                        dataLabels: {
+                            enabled: true
+                        }
+                    }
+                }
+            },
+            scale: 3,
+           fallbackToExportServer: false
+       }
+
+});
+</script>
+

@@ -12,10 +12,8 @@ class ProjectState::UsersController < ApplicationController
   def show
     if ! params.has_key? :id
       @user = User.current.id
-      warn("Setting user to %d" % @user)
     else
       @user = params[:id] == '-1' ? nil : params[:id].to_i
-      warn("User defined as %d" % @user)
     end
 
     projects = collectProjects(Setting.plugin_project_state['root_projects'])
