@@ -11,14 +11,15 @@ var chart = new Highcharts.Chart({
         },
         yAxis: {
             title: {
-                text: '<%= l(:report_bygroup_yaxis) %>'
+                text: '<%= l(:report_states_yaxis) %>'
             }
         },
         series: [
-          <% ProjectStatePlugin::Defaults::INTERESTING.each do |s| %>
-            { name: '<%= s %>',
-              data: <%= @counts[s] %>,
-            }<% if s != ProjectStatePlugin::Defaults::INTERESTING[-1] %>,<% end %>
+          <% @keys.each do |u| %>
+            { name: '<%= @analysts[u].firstname %>',
+              data: <%= @counts[u] %>,
+              visible: <% if @counts[u].sum == 0 %>false<% else %>true<% end %>
+            }<% if u != @keys[-1] %>,<% end %>
           <% end %>
         ],
         exporting: {
@@ -48,10 +49,10 @@ var chart = new Highcharts.Chart({
     </tr>
   </thead>
   <tbody>
-    <% ProjectStatePlugin::Defaults::INTERESTING.each do |s| %>
+    <% @keys.each do |u| %>
       <tr>
-        <td><%= s %></td>
-        <% @counts[s].each do |t| %>
+        <td><%= @analysts[u].firstname %></td>
+        <% @counts[u].each do |t| %>
           <td class="counts"><%= t %></td>
         <% end %>
       </tr>

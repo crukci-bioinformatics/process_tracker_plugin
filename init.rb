@@ -7,7 +7,7 @@ Redmine::Plugin.register :project_state do
   name 'Project State plugin'
   author 'Gord Brown'
   description 'Track project states, notify if/when various conditions occur'
-  version '1.1.3'
+  version '1.1.4'
   url 'https://github.com/crukci-bioinformatics/process_tracker_plugin'
   author_url 'http://gdbrown.org/blog/'
 
@@ -21,9 +21,9 @@ Redmine::Plugin.register :project_state do
                          'logfile' => '/var/log/redmine/project_state.log'},
            :partial => 'settings/project_state_settings' )
 
-  menu :top_menu, :ps_user, '/project_state/user', caption: :project_my_state_caption, after: :projects
-  menu :top_menu, :states, { controller: 'project_state/summary', action: 'index' }, caption: :project_state_caption, after: :mystates
-  menu :top_menu, :reports, { controller: 'project_state/project_state_reports', action: 'index' }, caption: :project_reports_caption, after: :states
+  menu :top_menu, :states, { controller: 'project_state/summary', action: 'index' }, caption: :project_state_caption, after: :myprojects
+  menu :top_menu, :ps_user, '/project_state/user', caption: :project_my_state_caption, after: :states
+  menu :top_menu, :reports, { controller: 'project_state/project_state_reports', action: 'index' }, caption: :project_reports_caption, after: :ps_user
 
 end
 
@@ -40,5 +40,5 @@ Rails.configuration.after_initialize do
   initr.ensure_custom_fields # ensure custom fields are present (should only need to be created once)
   projSet = initr.ensure_projects_have_custom_fields
   initr.populate_reports
-  initr.ensure_issues_have_custom_fields(projSet)
+#  initr.ensure_issues_have_custom_fields(projSet)
 end

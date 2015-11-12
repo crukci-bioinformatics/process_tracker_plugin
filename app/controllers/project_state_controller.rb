@@ -1,5 +1,6 @@
 require 'date'
 require 'set'
+require 'logger'
 
 require 'project_state/defaults'
 require 'project_state/utils'
@@ -8,7 +9,6 @@ require 'project_state/issue_filter'
 class ProjectStateController < ApplicationController
   include ProjectStatePlugin::Defaults
   include ProjectStatePlugin::Utilities
-  include ProjectStatePlugin::Logger
 
   unloadable
 

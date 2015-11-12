@@ -11,6 +11,7 @@ module ProjectStatePlugin
     include ProjectStatePlugin::Utilities
 
     def controller_issues_new_after_save(context={})
+     begin
       psid = CustomField.find_by(name: CUSTOM_PROJECT_STATE).id
       iss = context[:issue]
       cf = iss.custom_values.find_by(custom_field_id: psid)
@@ -35,9 +36,13 @@ module ProjectStatePlugin
           cval.save
         end
       end
+     rescue
+      $pslog.info("failed in save")
+     end
     end
 
     def controller_issues_edit_after_save(context={})
+     begin
       j = context[:journal]
       iss = context[:issue]
       if !j.nil? && j.journalized_type == 'Issue'
@@ -103,6 +108,9 @@ module ProjectStatePlugin
           end
         end
       end
+     rescue
+       $pslog.info("failed in edit")
+     end
     end
   end
 end

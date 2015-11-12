@@ -100,34 +100,4 @@ module ProjectStatePlugin
 
   end
 
-  module Logger
-
-    @@label = "PROJECT_STATE"
-
-    def debug(msg)
-      log = Rails.logger
-      log.tagged(@@label) { log.debug(msg) }
-    end
-
-    def info(msg)
-      log = Rails.logger
-      log.tagged(@@label) { log.info("[%s] %s"%[DateTime.now(),msg]) }
-    end
-
-    def warn(msg)
-      log = Rails.logger
-      log.tagged(@@label) { log.warn("[%s] WARNING: %s"%[DateTime.now(),msg]) }
-    end
-
-    def error(msg)
-      log = Rails.logger
-      log.tagged(@@label) { log.error("[%s] ERROR: %s"%[DateTime.now(),msg]) }
-    end
-
-    def fatal(msg)
-      log = Rails.logger
-      log.tagged(@@label) { log.fatal("[%s] FATAL: %s"%[DateTime.now(),msg]) }
-    end
-
-  end
 end

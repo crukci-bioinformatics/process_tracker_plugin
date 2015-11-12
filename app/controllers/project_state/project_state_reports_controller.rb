@@ -1,8 +1,8 @@
 require 'project_state/utils'
+require 'logger'
 
 class ProjectState::ProjectStateReportsController < ApplicationController
   include ProjectStatePlugin::Utilities
-  include ProjectStatePlugin::Logger
 
   unloadable
 
@@ -24,6 +24,77 @@ class ProjectState::ProjectStateReportsController < ApplicationController
     return [[l(:label_by_month),"by_month"],
             [l(:label_by_week),"by_week"],
             [l(:label_by_quarter),"by_quarter"]]
+  end
+
+  class Snapshot
+    include ProjectStatePlugin::Utilities
+
+    def initialize(projects)
+      @owners = {}
+      @states = {}
+      @statuses = {}
+      @trackers = {}
+      @open = IssueStatus.where(is_closed: false).map{|x| x.id}
+      tnames = semiString2List(Setting.plugin_project_state['ignore_trackers'])
+      @trackers_ignore = Tracker.where(name: tnames).map{|t| t.id}
+      @state_field = CustomField.find_by(name: 'Project State').id.to_s
+      Issue.where(project_id: projects).where(status: @open).includes(:custom_values).each do |iss|
+        id = iss.id
+        @owners[id] = iss.assigned_to_id
+        @states[id] = iss.state
+        @statuses[id] = iss.status_id
+        @trackers[id] = iss.tracker_id
+      end
+    end
+
+    def journal(iss,j)
+      if ! @owners.has_key?(iss.id)
+        @owners[iss.id] = iss.assigned_to_id
+        @states[iss.id] = iss.state
+        @statuses[iss.id] = iss.status_id
+        @trackers[iss.id] = iss.tracker_id
+      end
+      j.details.each do |jd|
+        if jd.property == 'cf' && jd.prop_key == @state_field
+          $pslog.warn("Inconsistency: issue=#{iss.id}  jstate=#{jd.value}  istate=#{@states[iss.id]}") if jd.value != @states[iss.id]
+          $pslog.debug("issue #{iss.id} state -> '#{jd.old_value}'")
+          @states[iss.id] = jd.old_value
+        elsif jd.property=='attr' && jd.prop_key=='assigned_to_id'
+          $pslog.warn("Inconsistency: issue=#{iss.id}  jowner=#{jd.value}  iowner=#{@owners[iss.id]}") if ((!jd.value.nil?) && (jd.value.to_i != @owners[iss.id]))
+          $pslog.debug("issue #{iss.id} owner -> '#{jd.old_value}'")
+          @owners[iss.id] = jd.old_value.to_i
+        elsif jd.property=='attr' && jd.prop_key=='status_id'
+          $pslog.warn("Inconsistency: issue=#{iss.id}  jstatus=#{jd.value}  istatus=#{@statuses[iss.id]}") if jd.value.to_i != @statuses[iss.id]
+          $pslog.debug("issue #{iss.id} status -> '#{jd.old_value}'")
+          @statuses[iss.id] = jd.old_value.to_i
+        elsif jd.property=='attr' && jd.prop_key=='tracker_id'
+          $pslog.warn("Inconsistency: issue=#{iss.id}  jtracker=#{jd.value}  itracker=#{@trackers[iss.id]}") if ((!jd.value.nil?) && (jd.value.to_i != @trackers[iss.id]))
+          $pslog.debug("issue #{iss.id} tracker -> '#{jd.old_value}'")
+          @trackers[iss.id] = jd.old_value.to_i
+        end
+      end
+    end
+
+    def snap_states
+      counts = Hash.new(0)
+      @states.keys.each do |k|
+        next if @trackers_ignore.include? @trackers[k]
+        counts[@states[k]] = counts[@states[k]] + 1 if @open.include?(@statuses[k])
+      end
+      return counts
+    end
+
+    def snap_people(state)
+      counts = Hash.new(0)
+      @states.keys.each do |k|
+        next if @trackers_ignore.include? @trackers[k]
+        if @states[k] == state && @open.include?(@statuses[k])
+          counts[@owners[k]] = counts[@owners[k]] + 1
+        end
+      end
+      return counts
+    end
+
   end
 
   def set_up_time(params,update)
@@ -85,6 +156,8 @@ class ProjectState::ProjectStateReportsController < ApplicationController
           @from = @to << 3
           @intervaltitle = "#{@from.strftime('%Y %b')} to #{@to.strftime('%Y %b')}"
         else
+          $pslog.error("Unexpected period description: '#{params['period_type']}'")
+          flash[:error] = l(:report_bad_period_descr,:period => params['period_type'])
           okay = false
         end
         if okay
@@ -112,6 +185,10 @@ class ProjectState::ProjectStateReportsController < ApplicationController
           flash[:error] = l(:report_date_format_error)
           okay = false
         end
+      else
+        $pslog.error("Unexpected date type '#{date_type}'")
+        flash[:error] = l(:report_bad_date_type,:datetype => params['date_type'])
+        okay = false
       end
     end
     @periods = ps_options_for_period
@@ -124,21 +201,27 @@ class ProjectState::ProjectStateReportsController < ApplicationController
     @ends = []
     @labels = []
     okay = true
+    real_to = [@to,Date.today].min
     case @params['interval_type']
     when 'by_month'
-      while current < @to
+#      while current < @to
+      while current < real_to
         @labels << Date::ABBR_MONTHNAMES[current.month]
         current = current >> 1
         @ends << current
       end
     when 'by_week'
-      while current < @to
-        @labels << "W#{current.cweek}, #{Date::ABBR_MONTHNAMES[current.month]} #{current.day}"
+      current = current.beginning_of_week
+#      while current < (@to - 7)
+      while current < (real_to - 7)
+        lweek = current + 6
+        @labels << "W#{lweek.cweek}, #{Date::ABBR_MONTHNAMES[lweek.month]} #{lweek.day}"
         current = current + 7
         @ends << current
       end
     when 'by_quarter'
-      while current < @to
+#      while current < @to
+      while current < real_to
         q = ((current.month - 1) / 3)
         q = 4 if q == 0
         @labels << "Q#{q}"
@@ -148,6 +231,7 @@ class ProjectState::ProjectStateReportsController < ApplicationController
     else
       okay = false
       $pslog.error{"Unknown interval range '#{@params['interval_type']}'"}
+      flash[:error] = l(:report_bad_interval_type,:inttype => params['interval_type'])
     end
     return okay
   end
@@ -217,9 +301,6 @@ class ProjectState::ProjectStateReportsController < ApplicationController
         else
           @frac[u][i] = 0.0
         end
-#        if @frac[u][i] >= 100.0
-#          $pslog.warn("user: #{u}  hours: #{hours}  expected: #{expected}  wh: #{wh}  absent: #{@absent[u][i]}  date: #{@ends[i]}")
-#        end
       end
     end
     @uids = @users.keys.sort{|a,b| @users[a].firstname <=> @users[b].firstname}
@@ -247,8 +328,7 @@ class ProjectState::ProjectStateReportsController < ApplicationController
     @make_plot = false
   end
 
-  def current_count_in_state
-    projlist = collectProjects(Setting.plugin_project_state['root_projects'])
+  def current_count_in_state(projlist)
     nc = IssueStatus.where(is_closed: false)
     issues = Issue.where(status: nc).where(project_id: projlist)
     cf = CustomField.find_by(name: 'Project State')
@@ -260,35 +340,50 @@ class ProjectState::ProjectStateReportsController < ApplicationController
   end
 
   def number_in_state
-    current = current_count_in_state()
+    projects = collectProjects(Setting.plugin_project_state['root_projects'])
+    snapshot = Snapshot.new(projects)
     fid = CustomField.find_by(name: 'Project State').id.to_s
     today = Date.today
     ind = @ends.length - 1
     @counts = {}
     ProjectStatePlugin::Defaults::INTERESTING.each do |s|
       @counts[s] = []
-      $pslog.info{"Current #{s}: #{current[s]}"}
     end
-    Journal.where(created_on: @from..today).order(created_on: :desc).each do |j|
+    Journal.where(created_on: @from..today).includes(:journalized,:details).order(created_on: :desc).each do |j|
+      next if ! projects.include?(j.journalized.project_id)
       if j.created_on < @ends[ind]
         ind -= 1
+        # following is a kludge to account for the possibility that this journal entry may in fact
+        # be earlier than the current interval, i.e. that the current interval contains no
+        # jounals.  This seems unlikely, but still... and this doesn't cope with two empty
+        # intervals.  But that's even less likely.
+        if ind > 0 && j.created_on < @ends[ind]
+          $pslog.info("Number in State: empty interval ending #{@ends[ind+1]}")
+          ind -= 1
+        end
+        snap = snapshot.snap_states()
         @counts.keys.each do |s|
-          @counts[s] << current[s]
-        end
-        break if ind < 0
-      end
-      j.details.each do |jd|
-        if jd.property == 'cf' && jd.prop_key == fid
-          if @counts.keys.include? jd.value
-            current[jd.value] -= 1
-            $pslog.info("Decrementing '#{jd.value} (#{current[jd.value]})")
-          end
-          if @counts.keys.include? jd.old_value
-            current[jd.old_value] += 1
-            $pslog.info("Incrementing '#{jd.old_value} (#{current[jd.old_value]})")
+          if snap.has_key?(s)
+            @counts[s] << snap[s]
+          else
+            @counts[s] << 0
           end
         end
+        break if ind < 0 # skip the first interval, because we report at the end, not start,so
+                         # we don't need to run through these.  Could just not load them, but
+                         # I'm confused enough already.
       end
+      snapshot.journal(j.journalized,j)
+#      j.details.each do |jd|
+#        if jd.property == 'cf' && jd.prop_key == fid
+#          if @counts.keys.include? jd.value
+#            current[jd.value] -= 1
+#          end
+#          if @counts.keys.include? jd.old_value
+#            current[jd.old_value] += 1
+#          end
+#        end
+#      end
     end
     @counts.keys.each do |s|
       @counts[s] = @counts[s].reverse
@@ -296,41 +391,69 @@ class ProjectState::ProjectStateReportsController < ApplicationController
     @make_plot = true
   end
 
-  def active_by_analyst
-    current = current_count_in_state()
-    fid = CustomField.find_by(name: 'Project State').id.to_s
+  def current_count_in_state_by_analyst(state,projects)
+    nc = IssueStatus.where(is_closed: false)
+    issues = Issue.where(status: nc).where(project_id: projects)
+    cf = CustomField.find_by(name: 'Project State')
+    counts = Hash.new(0)
+    CustomValue.where(customized: issues)
+               .where(custom_field_id: cf.id)
+               .where(value: state).each do |cv|
+      iss = cv.customized
+      counts[iss.asssigned_to_id] = counts[iss.assigned_to_id] + 1
+    end
+    return counts
+  end
+
+  def state_by_analyst(state)
+    projects = collectProjects(Setting.plugin_project_state['root_projects'])
     today = Date.today
     ind = @ends.length - 1
+    snap = Snapshot.new(projects)
     @counts = {}
-    ProjectStatePlugin::Defaults::INTERESTING.each do |s|
-      @counts[s] = []
-      $pslog.info{"Current #{s}: #{current[s]}"}
+    @analysts = {}
+    Group.find_by(lastname: 'Bioinformatics Core').users.each do |u|
+      @counts[u.id] = []
+      @analysts[u.id] = u
     end
-    Journal.where(created_on: @from..today).order(created_on: :desc).each do |j|
+    Journal.where(created_on: @from..today).includes(:journalized,:details).order(created_on: :desc).each do |j|
+      next if ! projects.include?(j.journalized.project_id)
       if j.created_on < @ends[ind]
         ind -= 1
-        @counts.keys.each do |s|
-          @counts[s] << current[s]
+        # following is a kludge to account for the possibility that this journal
+        # entry may in fact be earlier than the current interval, i.e. that the
+        # current interval contains no jounals.  This seems unlikely, but
+        # still... and this doesn't cope with two empty intervals.  But that's
+        # even less likely.
+        if ind > 0 && j.created_on < @ends[ind]
+          $pslog.info("Number in State: empty interval ending #{@ends[ind+1]}")
+          ind -= 1
+        end
+        shot = snap.snap_people(state)
+        @counts.keys.each do |u|
+          if shot.has_key?(u)
+            @counts[u] << shot[u]
+          else
+            @counts[u] << 0
+          end
         end
         break if ind < 0
       end
-      j.details.each do |jd|
-        if jd.property == 'cf' && jd.prop_key == fid
-          if @counts.keys.include? jd.value
-            current[jd.value] -= 1
-            $pslog.info("Decrementing '#{jd.value} (#{current[jd.value]})")
-          end
-          if @counts.keys.include? jd.old_value
-            current[jd.old_value] += 1
-            $pslog.info("Incrementing '#{jd.old_value} (#{current[jd.old_value]})")
-          end
-        end
-      end
+      snap.journal(j.journalized,j)
     end
     @counts.keys.each do |s|
       @counts[s] = @counts[s].reverse
     end
+    @keys = @counts.keys.sort{|a,b| @analysts[a].firstname <=> @analysts[b].firstname}
     @make_plot = true
+  end
+
+  def active_by_analyst
+    state_by_analyst("Active")
+  end
+
+  def hold_by_analyst
+    state_by_analyst("Hold")
   end
 
   def index
