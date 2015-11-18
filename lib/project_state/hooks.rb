@@ -68,6 +68,19 @@ module ProjectStatePlugin
               cval.value = ndef
               cval.save
             end
+            sol = User.find_by(login: 'solexa')
+            u = User.current
+            if sol == u
+              if jd.value == 'Submit'
+                # set status to 'submitted to genomics'
+                iss.status = IssueStatus.find_by(name: 'Submitted to Genomics')
+                iss.save
+              elsif jd.value == 'Ready'
+                # set status to 'Ready'
+                iss.status = IssueStatus.find_by(name: 'Ready')
+                iss.save
+              end
+            end
           elsif jd.property == 'attr' && jd.prop_key == 'tracker_id'
             # update time limit
             cvals = CustomValue.where(customized: iss).where(custom_field_id: hlid)

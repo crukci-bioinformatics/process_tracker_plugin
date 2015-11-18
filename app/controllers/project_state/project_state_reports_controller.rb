@@ -1,5 +1,6 @@
 require 'project_state/utils'
 require 'logger'
+require 'i18n'
 
 class ProjectState::ProjectStateReportsController < ApplicationController
   include ProjectStatePlugin::Utilities
@@ -57,19 +58,19 @@ class ProjectState::ProjectStateReportsController < ApplicationController
       j.details.each do |jd|
         if jd.property == 'cf' && jd.prop_key == @state_field
           $pslog.warn("Inconsistency: issue=#{iss.id}  jstate=#{jd.value}  istate=#{@states[iss.id]}") if jd.value != @states[iss.id]
-          $pslog.debug("issue #{iss.id} state -> '#{jd.old_value}'")
+#          $pslog.debug("issue #{iss.id} state -> '#{jd.old_value}'")
           @states[iss.id] = jd.old_value
         elsif jd.property=='attr' && jd.prop_key=='assigned_to_id'
           $pslog.warn("Inconsistency: issue=#{iss.id}  jowner=#{jd.value}  iowner=#{@owners[iss.id]}") if ((!jd.value.nil?) && (jd.value.to_i != @owners[iss.id]))
-          $pslog.debug("issue #{iss.id} owner -> '#{jd.old_value}'")
+#          $pslog.debug("issue #{iss.id} owner -> '#{jd.old_value}'")
           @owners[iss.id] = jd.old_value.to_i
         elsif jd.property=='attr' && jd.prop_key=='status_id'
           $pslog.warn("Inconsistency: issue=#{iss.id}  jstatus=#{jd.value}  istatus=#{@statuses[iss.id]}") if jd.value.to_i != @statuses[iss.id]
-          $pslog.debug("issue #{iss.id} status -> '#{jd.old_value}'")
+#          $pslog.debug("issue #{iss.id} status -> '#{jd.old_value}'")
           @statuses[iss.id] = jd.old_value.to_i
         elsif jd.property=='attr' && jd.prop_key=='tracker_id'
           $pslog.warn("Inconsistency: issue=#{iss.id}  jtracker=#{jd.value}  itracker=#{@trackers[iss.id]}") if ((!jd.value.nil?) && (jd.value.to_i != @trackers[iss.id]))
-          $pslog.debug("issue #{iss.id} tracker -> '#{jd.old_value}'")
+#          $pslog.debug("issue #{iss.id} tracker -> '#{jd.old_value}'")
           @trackers[iss.id] = jd.old_value.to_i
         end
       end
@@ -210,6 +211,7 @@ class ProjectState::ProjectStateReportsController < ApplicationController
         current = current >> 1
         @ends << current
       end
+      @interval_label = 'month'
     when 'by_week'
       current = current.beginning_of_week
 #      while current < (@to - 7)
@@ -219,6 +221,7 @@ class ProjectState::ProjectStateReportsController < ApplicationController
         current = current + 7
         @ends << current
       end
+      @interval_label = 'week'
     when 'by_quarter'
 #      while current < @to
       while current < real_to
@@ -228,6 +231,7 @@ class ProjectState::ProjectStateReportsController < ApplicationController
         current = current >> 3
         @ends << current
       end
+      @interval_label = 'quarter'
     else
       okay = false
       $pslog.error{"Unknown interval range '#{@params['interval_type']}'"}
@@ -328,17 +332,6 @@ class ProjectState::ProjectStateReportsController < ApplicationController
     @make_plot = false
   end
 
-  def current_count_in_state(projlist)
-    nc = IssueStatus.where(is_closed: false)
-    issues = Issue.where(status: nc).where(project_id: projlist)
-    cf = CustomField.find_by(name: 'Project State')
-    counts = Hash.new(0)
-    CustomValue.where(customized: issues).where(custom_field_id: cf.id).each do |cv|
-      counts[cv.value] = counts[cv.value] + 1
-    end
-    return counts
-  end
-
   def number_in_state
     projects = collectProjects(Setting.plugin_project_state['root_projects'])
     snapshot = Snapshot.new(projects)
@@ -374,35 +367,11 @@ class ProjectState::ProjectStateReportsController < ApplicationController
                          # I'm confused enough already.
       end
       snapshot.journal(j.journalized,j)
-#      j.details.each do |jd|
-#        if jd.property == 'cf' && jd.prop_key == fid
-#          if @counts.keys.include? jd.value
-#            current[jd.value] -= 1
-#          end
-#          if @counts.keys.include? jd.old_value
-#            current[jd.old_value] += 1
-#          end
-#        end
-#      end
     end
     @counts.keys.each do |s|
       @counts[s] = @counts[s].reverse
     end
     @make_plot = true
-  end
-
-  def current_count_in_state_by_analyst(state,projects)
-    nc = IssueStatus.where(is_closed: false)
-    issues = Issue.where(status: nc).where(project_id: projects)
-    cf = CustomField.find_by(name: 'Project State')
-    counts = Hash.new(0)
-    CustomValue.where(customized: issues)
-               .where(custom_field_id: cf.id)
-               .where(value: state).each do |cv|
-      iss = cv.customized
-      counts[iss.asssigned_to_id] = counts[iss.assigned_to_id] + 1
-    end
-    return counts
   end
 
   def state_by_analyst(state)
@@ -456,6 +425,81 @@ class ProjectState::ProjectStateReportsController < ApplicationController
     state_by_analyst("Hold")
   end
 
+  def collapse_project(p)
+    $pslog.debug("Checking #{p.name}...")
+    p.children.each do |kid|
+      collapse_project(kid)
+      $pslog.debug("Collapsing #{kid.name}...")
+      src = @times[kid.id]
+      dst = @times[p.id]
+      (0..(src.length-1)).each {|i| dst[i] = dst[i] + src[i]}
+      @projects.delete(kid.id)
+    end
+  end
+
+  def collapse_projects(rg_pid)
+    @projects.each do |pid,proj|
+      if proj.parent_id == rg_pid
+        collapse_project(proj)
+      end
+    end
+  end
+
+  def hours_current_and_average_csv
+    io = StringIO.new(string="",mode="w")
+    io.printf(",#{@avg_tag},#{@cur_tag}\n")
+    (0..(@labels.length-1)).each do |i|
+      tag = I18n.transliterate(@labels[i])
+      io.printf("#{tag},#{@average[i]},#{@current[i]}\n")
+    end
+    fn = "#{@report.view}_#{@cur_tag}.csv"
+    send_data(io.string,filename: fn)
+  end
+
+  def hours_current_and_average
+    $pslog.debug("Starting report...")
+    @times = {}
+    @projects = {}
+    rg_pid = Project.find_by(name: 'Research Groups').id
+    projlist = collectProjects("Research Groups")
+    projlist.delete(rg_pid)
+    Project.where(id: projlist).each do |proj|
+      @projects[proj.id] = proj
+      @times[proj.id] = [0.0] * @ends.length
+    end
+    ind = 0
+    # can't use "find_each" here because it is incompatible with "order"
+    TimeEntry.where(spent_on: @from..(@ends[-1]-1)).order(:spent_on).each do |log|
+      pid = log.project_id
+      if projlist.include? pid
+        begin
+          while log.spent_on >= @ends[ind]
+            ind += 1
+          end
+        rescue
+          $pslog.error("ind=#{ind} len=#{@ends.length} log=#{log.spent_on} to=#{@to} ends[-1]=#{@ends[-1]}")
+          break
+        end
+        @times[pid][ind] += log.hours
+      end
+    end
+    collapse_projects(rg_pid)
+    @current = []
+    @average = []
+    @pids = @projects.keys.sort{|a,b| @projects[a].name <=> @projects[b].name}
+    @pids.each do |pid|
+      @current << @times[pid][-1]
+      @average << (@times[pid].sum / @times[pid].length).round(2)
+    end
+    @avg_tag = "#{@labels.length} #{@interval_label} average"
+    @cur_tag = @labels[-1]
+    @labels = @pids.each.map{|p| @projects[p].name}
+    if @params['format'] == 'csv'
+      hours_current_and_average_csv
+    end
+    @make_plot = true
+  end
+
   def index
     @reports = ProjectStateReport.all
     @reports.sort{|a,b| a.ordering <=> b.ordering}
@@ -470,9 +514,18 @@ class ProjectState::ProjectStateReportsController < ApplicationController
   end
 
   def update
+#    $pslog.warn("In the update controller...")
     flash.clear
     @report = ProjectStateReport.find(params[:id].to_i)
     @params = params
+#    @params.keys.each do |x|
+#      $pslog.warn("param: #{x} == #{@params[x]}")
+#    end
+#    if params.has_key? "format"
+#      $pslog.info("Before!")
+#      send_data("zork",filename: "thing.txt")
+#      $pslog.info("After!")
+#    end
     @okay = set_up_time(params,true)
     if @okay && @report.want_interval
       @okay = make_intervals

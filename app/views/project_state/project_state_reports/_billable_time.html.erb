@@ -22,17 +22,13 @@ var chart = new Highcharts.Chart({
             }<% if u != @uids[-1] %>,<% end %>
           <% end %>
         ],
+        plotOptions: {
+          series: {
+            animation: false
+          }
+        },
         exporting: {
-           chartOptions: {
-                plotOptions: {
-                    series: {
-                        dataLabels: {
-                            enabled: true
-                        }
-                    }
-                }
-            },
-            scale: 3,
+           scale: 3,
            fallbackToExportServer: false
        }
 

@@ -11,8 +11,13 @@ var chart = new Highcharts.Chart({
         },
         yAxis: {
             title: {
-                text: '<%= l(:report_bygroup_yaxis) %>'
+                text: '<%= l(:report_states_yaxis) %>'
             }
+        },
+        plotOptions: {
+          series: {
+            animation: false
+          }
         },
         series: [
           <% ProjectStatePlugin::Defaults::INTERESTING.each do |s| %>
@@ -22,16 +27,7 @@ var chart = new Highcharts.Chart({
           <% end %>
         ],
         exporting: {
-           chartOptions: {
-                plotOptions: {
-                    series: {
-                        dataLabels: {
-                            enabled: true
-                        }
-                    }
-                }
-            },
-            scale: 3,
+           scale: 3,
            fallbackToExportServer: false
        }
 

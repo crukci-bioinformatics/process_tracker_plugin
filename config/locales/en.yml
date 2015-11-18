@@ -3,7 +3,7 @@ en:
   project_state_caption: "ProjectStates"
   project_my_state_caption: "MyStates"
   project_state_title: "Project State Summary"
-  filter_report_link: "Paint Your Report"
+  filter_report_link: "Report 'Em High"
   regular_report_link: "The Regular Report"
   project_reports_title: "Project State Reports"
   project_reports_caption: "Reports"
@@ -52,6 +52,7 @@ en:
   text_flags: "Flags"
   text_unassigned: "Unassigned"
   text_save: "Save"
+  text_tracker: "Tracker"
 
   conf_title: "Project State Plugin: Configuration"
   conf_link: "Configure Project State Defaults"

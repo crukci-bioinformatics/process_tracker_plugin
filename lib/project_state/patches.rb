@@ -61,7 +61,7 @@ module ProjectStatePlugin
           returnval = true
           if u == sol && self.custom_field_id == cfid
             o = CustomValue.find(self.id)
-            returnval = StatesController::ORDERING[o.value] < StatesController::ORDERING[self.value]
+            returnval = ORDERING[o.value] < ORDERING[self.value]
           end
           return returnval
         end
@@ -82,7 +82,7 @@ module ProjectStatePlugin
           if u == sol
             self.details.each do |d|
               if d.prop_key.to_i == cfid
-                returnval = StatesController::ORDERING[d.old_value] < StatesController::ORDERING[d.value]
+                returnval = ORDERING[d.old_value] < ORDERING[d.value]
               end
             end
           end

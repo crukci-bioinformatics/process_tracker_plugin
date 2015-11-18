@@ -1,0 +1,66 @@
+<script>
+var chart = new Highcharts.Chart({
+        chart: {
+            renderTo: 'chart_container',
+            type: 'column'
+        },
+        plotOptions: {
+          series: {
+            animation: false
+          }
+        },
+        title: {
+            text: '<%= @report.name + ": #{@intervaltitle}" %>'
+        },
+        xAxis: {
+            categories: <%=raw @labels %>
+        },
+        yAxis: {
+            title: {
+                text: '<%= l(:report_bygroup_yaxis) %>'
+            }
+        },
+        plotOptions: {
+          series: {
+            animation: false
+          }
+        },
+        series: [
+            { name: '<%= @avg_tag %>',
+              data: <%= @average %>,
+            },
+            { name: '<%= @cur_tag %>',
+              data: <%= @current %> }
+        ],
+        exporting: {
+           scale: 3,
+           fallbackToExportServer: false
+       }
+
+});
+</script>
+
+<h3>Tabular View</h3>
+<%= link_to "CSV", project_state_project_state_report_path(@report,
+                   format: 'csv',
+                   date_type: @params['date_type'],
+                   period_type: @params['period_type'],
+                   report_date_from: @params['report_date_from'],
+                   report_date_to: @params['report_date_to'],
+                   interval_type: @params['interval_type']),
+            method: :patch %>
+
+<table id="ps_counts">
+  <thead>
+    <tr><th></th><th><%= @avg_tag %></th><th><%= @cur_tag %></th></tr>
+  </thead>
+  <tbody>
+    <% (0..(@pids.length-1)).each do |i| %>
+      <tr>
+        <td><%= @projects[@pids[i]].name %></td>
+        <td><%= @average[i] %></td>
+        <td><%= @current[i] %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

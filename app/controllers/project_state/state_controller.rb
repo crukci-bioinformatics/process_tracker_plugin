@@ -15,6 +15,8 @@ class ProjectState::StateController < ApplicationController
     issues = collectIssues(projects).select{|i| i if i.state == state}
     if params[:report] == 'stark'
       issues = filter_issues(issues)
+    else
+      issues = filter_on_tracker(issues)
     end
 
     @issues = Hash.new

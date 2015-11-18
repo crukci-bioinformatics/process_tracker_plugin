@@ -14,6 +14,11 @@ var chart = new Highcharts.Chart({
                 text: '<%= l(:report_states_yaxis) %>'
             }
         },
+        plotOptions: {
+          series: {
+            animation: false
+          }
+        },
         series: [
           <% @keys.each do |u| %>
             { name: '<%= @analysts[u].firstname %>',
@@ -23,16 +28,7 @@ var chart = new Highcharts.Chart({
           <% end %>
         ],
         exporting: {
-           chartOptions: {
-                plotOptions: {
-                    series: {
-                        dataLabels: {
-                            enabled: true
-                        }
-                    }
-                }
-            },
-            scale: 3,
+           scale: 3,
            fallbackToExportServer: false
        }
 

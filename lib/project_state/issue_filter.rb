@@ -37,6 +37,7 @@ module ProjectStatePlugin
       end
   
       # check time in state (or since last logged time, if 'Active')
+      on_hold = IssueStatus.find_by(name: 'On Hold').id
       interval = days_in_state(issue)
       if interval > issue.state_timeout
         if issue.state == 'Active'
@@ -44,7 +45,7 @@ module ProjectStatePlugin
                      :state => issue.state,
                      :actual => interval,
                      :threshold => issue.state_timeout)
-        else
+        elsif issue.status_id != on_hold
           flags << l(:flag_days_in_state,
                      :state => issue.state,
                      :actual => interval,
@@ -94,7 +95,16 @@ module ProjectStatePlugin
       # only show "analysis" issues if not under "Research Groups"
       filt = filt.select{|i| i if !(filt_projects.include?(i.project_id)) || anal.include?(i.tracker)}
 
+      filt = filter_on_tracker(filt)
+
       return filt
+    end
+
+    def filter_on_tracker(issues)
+      tnames = semiString2List(Setting.plugin_project_state['ignore_trackers'])
+      trackers_ignore = Tracker.where(name: tnames).map{|t| t.id}
+      fissues = issues.select{|iss| iss if ! trackers_ignore.include?(iss.tracker_id)}
+      return fissues
     end
 
   end

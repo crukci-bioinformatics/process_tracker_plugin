@@ -22,6 +22,8 @@ class ProjectState::UsersController < ApplicationController
     
     if params[:report] == 'stark'
       issues = filter_issues(issues)
+    else
+      issues = filter_on_tracker(issues)
     end
 
     @issue_hash = Hash.new

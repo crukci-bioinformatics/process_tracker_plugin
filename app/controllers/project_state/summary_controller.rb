@@ -17,6 +17,8 @@ class ProjectState::SummaryController < ApplicationController
     issues = collectIssues(projects)
     if @stark
       issues = filter_issues(issues)
+    else
+      issues = filter_on_tracker(issues)
     end
 
     @users = {}

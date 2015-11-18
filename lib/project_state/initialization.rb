@@ -204,6 +204,13 @@ module ProjectStatePlugin
           ps.dateview = 'form_dates'
           ps.want_interval = true
         end
+        ProjectStateReport.find_or_create_by(name: "Hours Logged: Current and Average") do |ps|
+          $pslog.info("Creating Current and Average Report")
+          ps.ordering = 7
+          ps.view = "hours_current_and_average"
+          ps.dateview = 'form_dates'
+          ps.want_interval = true
+        end
       rescue
         $pslog.debug("Populate reports later.")
       end
