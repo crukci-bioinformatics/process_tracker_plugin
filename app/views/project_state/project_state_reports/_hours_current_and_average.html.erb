@@ -16,18 +16,14 @@ var chart = new Highcharts.Chart({
             categories: <%=raw @labels %>
         },
         yAxis: {
+            min: 0,
             title: {
                 text: '<%= l(:report_bygroup_yaxis) %>'
             }
         },
-        plotOptions: {
-          series: {
-            animation: false
-          }
-        },
         series: [
             { name: '<%= @avg_tag %>',
-              data: <%= @average %>,
+              data: <%= @average %>
             },
             { name: '<%= @cur_tag %>',
               data: <%= @current %> }

@@ -205,7 +205,6 @@ class ProjectState::ProjectStateReportsController < ApplicationController
     real_to = [@to,Date.today].min
     case @params['interval_type']
     when 'by_month'
-#      while current < @to
       while current < real_to
         @labels << Date::ABBR_MONTHNAMES[current.month]
         current = current >> 1
@@ -214,7 +213,6 @@ class ProjectState::ProjectStateReportsController < ApplicationController
       @interval_label = 'month'
     when 'by_week'
       current = current.beginning_of_week
-#      while current < (@to - 7)
       while current < (real_to - 7)
         lweek = current + 6
         @labels << "W#{lweek.cweek}, #{Date::ABBR_MONTHNAMES[lweek.month]} #{lweek.day}"
@@ -223,7 +221,6 @@ class ProjectState::ProjectStateReportsController < ApplicationController
       end
       @interval_label = 'week'
     when 'by_quarter'
-#      while current < @to
       while current < real_to
         q = ((current.month - 1) / 3)
         q = 4 if q == 0
@@ -250,7 +247,7 @@ class ProjectState::ProjectStateReportsController < ApplicationController
     end
     ind = 0
     # can't use "find_each" here because it is incompatible with "order"
-    TimeEntry.where(spent_on: @from..(@to-1)).order(:spent_on).each do |log|
+    TimeEntry.where(spent_on: @from..(@end[-1]-1)).order(:spent_on).each do |log|
       pid = log.project_id
       if projlist.include? pid
         while log.spent_on >= @ends[ind]
@@ -283,11 +280,17 @@ class ProjectState::ProjectStateReportsController < ApplicationController
     end
     ind = 0
     # can't use "find_each" here because it is incompatible with "order"
-    TimeEntry.where(spent_on: @from..(@to-1)).order(:spent_on).each do |log|
+    TimeEntry.where(spent_on: @from..(@ends[-1]-1)).order(:spent_on).each do |log|
       u = log.user_id
       next unless @users.has_key? u
-      while log.spent_on >= @ends[ind]
-        ind += 1
+      begin
+        while log.spent_on >= @ends[ind]
+          ind += 1
+        end
+      rescue ArgumentError => ae
+        $pslog.warn("AE: log.id=#{log.id}  ind=#{ind}  ends[ind]=#{@ends[ind]}  elen=#{@ends.length}")
+        $pslog.warn("AE: ends[-1]=#{@ends[-1]}  logdate=#{log.spent_on}")
+        next
       end
       if projlist.include? log.project_id
         @times[u][ind] += log.hours
