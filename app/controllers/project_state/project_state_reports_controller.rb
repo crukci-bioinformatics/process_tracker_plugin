@@ -247,7 +247,7 @@ class ProjectState::ProjectStateReportsController < ApplicationController
     end
     ind = 0
     # can't use "find_each" here because it is incompatible with "order"
-    TimeEntry.where(spent_on: @from..(@end[-1]-1)).order(:spent_on).each do |log|
+    TimeEntry.where(spent_on: @from..(@ends[-1]-1)).order(:spent_on).each do |log|
       pid = log.project_id
       if projlist.include? pid
         while log.spent_on >= @ends[ind]
