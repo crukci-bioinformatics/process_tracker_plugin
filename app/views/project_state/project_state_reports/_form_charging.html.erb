@@ -1,0 +1,21 @@
+<div id="project_state_date_form">
+  <%= form_for([:project_state, @report], method: 'patch', html: {multipart: true}) do %>
+  <fieldset>
+
+    <div>
+      <label for=:report_fin_interval><%= l(:report_fin_label) %></label>
+      <%= select_tag(:report_fin_interval, options_for_select(@fin_list,@default_month)) %>
+    </div>
+
+    <div>
+      <label for=:report_fin_file><%= l(:report_fin_fileupload) %></label>
+      <%= file_field_tag 'spreadsheet' %>
+    </div>
+
+    <div>
+      <%= submit_tag(l(:report_submit)) %>
+    </div>
+
+  </fieldset>
+  <% end %>
+</div>

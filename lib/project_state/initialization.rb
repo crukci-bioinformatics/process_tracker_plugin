@@ -211,6 +211,13 @@ module ProjectStatePlugin
           ps.dateview = 'form_dates'
           ps.want_interval = true
         end
+        ProjectStateReport.find_or_create_by(name: "Finance Report") do |ps|
+          $pslog.info("Creating Finance Report")
+          ps.ordering = 8
+          ps.view = "finance_report"
+          ps.dateview = 'form_charging'
+          ps.want_interval = false
+        end
       rescue
         $pslog.debug("Populate reports later.")
       end

@@ -1,6 +1,10 @@
-require 'project_state/utils'
 require 'logger'
 require 'i18n'
+
+$: << '/opt/redmine/ruby-2.2.2/lib/ruby/gems/2.2.0/gems'
+$: << '/opt/redmine/ruby-2.2.2/lib/ruby/gems/2.2.0/gems/simple_xlsx_reader-1.0.2/lib'
+require 'project_state/utils'
+require 'project_state/finance'
 
 class ProjectState::ProjectStateReportsController < ApplicationController
   include ProjectStatePlugin::Utilities
@@ -195,6 +199,14 @@ class ProjectState::ProjectStateReportsController < ApplicationController
     @periods = ps_options_for_period
     @intervals = ps_options_for_interval
     return okay
+  end
+
+  def set_up_months(params,update)
+    tod = Date.today
+    @fin_list = (0..11).each.map do |i|
+      m = tod << i
+      tag = "#{Date::ABBR_MONTHNAMES[m.month]}-#{m.strftime("%y")}"
+    end
   end
 
   def make_intervals
@@ -394,7 +406,7 @@ class ProjectState::ProjectStateReportsController < ApplicationController
         ind -= 1
         # following is a kludge to account for the possibility that this journal
         # entry may in fact be earlier than the current interval, i.e. that the
-        # current interval contains no jounals.  This seems unlikely, but
+        # current interval contains no journals.  This seems unlikely, but
         # still... and this doesn't cope with two empty intervals.  But that's
         # even less likely.
         if ind > 0 && j.created_on < @ends[ind]
@@ -503,6 +515,96 @@ class ProjectState::ProjectStateReportsController < ApplicationController
     @make_plot = true
   end
 
+  def finance_report_csv
+    io = StringIO.new(string="",mode="w")
+    io.printf("Grant,Code,Hours\n")
+    @grants.each_with_index do |g,i|
+      tag = g.nil? ? nil : I18n.transliterate(g)
+      io.printf("\"#{tag}\",#{@codes[i]},#{@costs[i]}\n")
+    end
+
+    if @orphans.length > 0
+      io.printf("\n\nOrphans\n")
+      io.printf("\nCode,Project,Issue,User,Activity,Hours,Date,Subject\n")
+      @orphans.each do |orph|
+        io.printf("#{orph.code},#{orph.project},#{orph.issue},#{orph.user},#{orph.activity},#{orph.hours},#{orph.date},#{orph.descr}\n")
+      end
+    end
+
+    fn = "Core_finance_#{@default_month}.csv"
+    send_data(io.string,filename: fn)
+  end
+
+  class Orphan < Struct.new(:code,:project,:issue,:descr,:user,:activity,:hours,:date)
+  end
+
+  def finance_report
+    $pslog.debug("Starting report...")
+    $pslog.debug("File: #{params['spreadsheet'].class}")
+    $pslog.debug("Month: #{params['report_fin_interval']}")
+    $pslog.debug("Keys: #{params.keys.join(",")}")
+    if params['spreadsheet'].nil?
+      flash[:error] = 'Please choose a spreadsheet.'
+      @okay = false
+      return
+    end
+     
+    if params['spreadsheet'].class == String
+      @tmp_spreadsheet = params['spreadsheet']
+    else
+      @tmp_spreadsheet = save_file(params['spreadsheet'])
+    end
+    @default_month = params['report_fin_interval']
+    (month,year) = params['report_fin_interval'].split('-')
+    sheet = FinanceSheet.new(@tmp_spreadsheet)
+    data = sheet.retrieve(year,month)
+    @grants = data[0]
+    @codes = data[1]
+    codemap = {}
+    @codes.each_with_index{|c,i| codemap[c]=i}
+    @costs = [0.0] * @codes.length
+
+    projects = collectProjects('Research Groups')
+    nc_activities = collectActivities(Setting.plugin_project_state['non_chargeable'])
+    cfid = CustomField.find_by(type: 'IssueCustomField', name: 'Cost Centre').id
+    p = Date.parse(params['report_fin_interval'])
+    @from = p.beginning_of_month
+    @to = p.end_of_month + 1
+    @orphans = []
+    TimeEntry.where(spent_on: @from..(@to-1)).includes(:project, :issue).each do |log|
+      next unless projects.include? log.project_id
+      next if nc_activities.include? log.activity_id
+      iss = log.issue
+      code = iss.cost_centre
+      ind = @codes.index(code)
+#      $pslog.debug("iss #{iss.id}  code=#{code}  ind=#{ind}")
+      if code.nil?
+        $pslog.warn("Nobody to charge for time entry #{log.id}.")
+        pn = Project.find(log.project_id).name
+        un = User.find(log.user_id).firstname
+        an = Enumeration.find(log.activity_id).name
+        @orphans << Orphan.new("",pn,log.issue_id,iss.subject,un,an,log.hours,log.spent_on)
+      elsif !ind.nil?
+        @costs[ind] += log.hours
+      else
+        row = hunt_for_swag(@grants,code)
+        if row.nil?
+          $pslog.warn("No cost code matching #{code}, log=#{log.id}")
+          pn = Project.find(log.project_id).name
+          un = User.find(log.user_id).firstname
+          an = Enumeration.find(log.activity_id).name
+          @orphans << Orphan.new(code,pn,log.issue_id,iss.subject,un,an,log.hours,log.spent_on)
+        else
+          @costs[row] += log.hours
+        end
+      end
+    end
+    if @params['format'] == 'csv'
+      finance_report_csv
+    end
+    make_plot = false
+  end
+
   def index
     @reports = ProjectStateReport.all
     @reports.sort{|a,b| a.ordering <=> b.ordering}
@@ -512,7 +614,12 @@ class ProjectState::ProjectStateReportsController < ApplicationController
     flash.clear
     @report = ProjectStateReport.find(params[:id].to_i)
     @params = params
-    @okay = set_up_time(params,false)
+    if @report.dateview == 'form_dates'
+      @okay = set_up_time(params,false)
+    else
+      @okay = set_up_months(params,false)
+    end
+    @default_month = @fin_list[1]
     @make_plot = false
   end
 
@@ -529,7 +636,11 @@ class ProjectState::ProjectStateReportsController < ApplicationController
 #      send_data("zork",filename: "thing.txt")
 #      $pslog.info("After!")
 #    end
-    @okay = set_up_time(params,true)
+    if @report.dateview == 'form_dates'
+      @okay = set_up_time(params,true)
+    else
+      @okay = set_up_months(params,false)
+    end
     if @okay && @report.want_interval
       @okay = make_intervals
     end

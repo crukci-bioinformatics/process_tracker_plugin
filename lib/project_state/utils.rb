@@ -1,4 +1,6 @@
-require 'date'
+require 'tmpdir'
+require 'i18n'
+require 'set'
 
 module ProjectStatePlugin
   module Utilities
@@ -23,6 +25,15 @@ module ProjectStatePlugin
         end
       end
       return projList
+    end
+
+    def collectActivities(names)
+      acts = semiString2List(names)
+      ids = []
+      acts.each do |act|
+        ids  = ids + Enumeration.where(name: act, type: 'TimeEntryActivity').map{|x| x.id}
+      end
+      return ids
     end
 
     def collectIssues(projects)
@@ -98,6 +109,54 @@ module ProjectStatePlugin
       return wh
     end
 
+    def save_file(srcfd)
+      bufsize = 524288 # 2**19 = 512Kb
+      td = Dir.tmpdir
+      tn = Dir::Tmpname.make_tmpname("finance_",1)
+      tpath = File.join(td,tn)
+      dstfd = File.open(tpath,"w")
+      dstfd.binmode
+      buffer = srcfd.read(bufsize)
+      while (!buffer.nil?) and buffer.length > 0
+        dstfd.write(buffer)
+        buffer = srcfd.read(bufsize)
+      end
+      dstfd.close
+      return tpath
+    end
+
+    def get_project_costcode(proj,grants,codes)
+      # find proj name in grants list, return corresponding code
+      # warn if proj name occurs multiple times
+      pname = I18n.transliterate(proj.name).downcase.strip
+      code = Set.new()
+      grants.each_with_index do |g,i|
+        code.add(codes[i]) if g == pname
+      end
+      if code.size > 1
+        $pslog.error("Non-unique code for #{pname}: #{code}")
+        return nil 
+      elif code.size == 0
+        pslog.warn("Missing code for #{pname}")
+        return nil
+      end
+      return code.to_a[0]
+    end
+
+    def hunt_for_swag(grants,code)
+      # hunt for SWAG code in the grant names
+      re = /(^|\s)([^\s]+)(\s|$)/
+      matches = []
+      grants.each_with_index do |g,i|
+        pos = re =~ g
+        next if pos.nil?
+        matches << i if $2 == code
+      end
+      if matches.length > 1
+        $pslog.warning("Multiple matches to code '#{code}' in grant table, returning first")
+      end
+      return matches.length > 0 ? matches[0] : nil
+    end
   end
 
 end

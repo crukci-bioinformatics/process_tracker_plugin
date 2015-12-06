@@ -31,4 +31,8 @@
    <%= text_field_tag 'settings[log_file]', @settings['log_file'] %>
 </p>
 
+<p><label for='settings_non_chargeable'><span title="<%= l(:settings_non_chargeable_descr) %>"><%= l(:settings_non_chargeable_label) %></span></label>
+   <%= text_field_tag 'settings[non_chargeable]', @settings['non_chargeable'] %>
+</p>
+
 <p><a href="/project_state/configure"><%= l(:conf_link) %></a></p>

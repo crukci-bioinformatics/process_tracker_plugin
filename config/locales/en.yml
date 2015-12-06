@@ -33,6 +33,8 @@ en:
   settings_holiday_url_descr: "This will return a JSON list of bank holidays.  Run the rake task 'redmine:project_state:bank_holidays' to refresh the list."
   settings_log_file_label: "Project State log file"
   settings_log_file_descr: "Location where log messages specifically from the project state plugin will be written."
+  settings_non_chargeable_label: "Non-chargeable activities"
+  settings_non_chargeable_descr: "Time logged to these activities are not billed to research groups."
 
   flag_days_since_logged_time: "Days since logged time in state %{state}: %{actual} > %{threshold}"
   flag_days_in_state: "Days in state %{state}: %{actual} > %{threshold}"
@@ -85,6 +87,8 @@ en:
   report_bad_date_type: "Unexpected date type '%{datetype}'.  Please report this error."
   report_bad_interval_type: "Unexpected interval '%{inttype}'.  Please report this error."
   report_states_yaxis: "Number of Projects"
+  report_fin_label: "Month"
+  report_fin_fileupload: "Finance Spreadsheet"
 
   label_last_12: "last 12 months"
   label_last_6: "last 6 months"

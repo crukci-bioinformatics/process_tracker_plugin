@@ -32,6 +32,23 @@ module ProjectStatePlugin
           return self.journals.joins(:details).where(journal_details: { prop_key: cfid}).maximum(:created_on)
         end
 
+        def cost_centre
+          cf = IssueCustomField.find_by(name: CUSTOM_ISS_COSTCODE)
+          code = self.custom_values.find_by(custom_field: cf)
+          if code.nil? || code.value == ""
+            cf = ProjectCustomField.find_by(name: CUSTOM_PROJ_COSTCODE)
+            proj = self.project
+            code = proj.custom_values.find_by(custom_field: cf)
+            if code.nil? || code.value == ""
+              while (! proj.parent_id.nil?) && (code.nil? || code.value == "")
+                proj = proj.parent
+                code = proj.custom_values.find_by(custom_field: cf)
+              end
+            end
+          end
+          return nil if code.nil?
+          return code.value == "" ? nil : code.value
+        end
       end
     end
   end

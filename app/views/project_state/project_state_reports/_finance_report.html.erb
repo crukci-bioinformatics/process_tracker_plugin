@@ -1,0 +1,44 @@
+<h3>Tabular View</h3>
+<p><%= link_to "CSV", project_state_project_state_report_path(@report,
+                   format: 'csv',
+                   report_fin_interval: @params['report_fin_interval'],
+                   spreadsheet: @tmp_spreadsheet),
+            method: :patch %> | <span style="font-size: x-large;">Month: <%= @default_month %></span></p>
+
+<table id="ps_counts">
+  <thead>
+    <tr><th>Grant</th><th>Code</th><th>Hours</th></tr>
+  </thead>
+  <tbody>
+    <% @grants.each_with_index do |g,i| %>
+      <tr>
+        <td><%= g %></td>
+        <td><%= @codes[i] %></td>
+        <td><%= @costs[i] == 0 ? "" : @costs[i] %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<% if @orphans.length > 0 %>
+<h3>Orphans</h3>
+<table id="ps_counts">
+  <thead>
+    <tr><th>Code</th><th>Project</th><th>Issue</th><th>User</th><th>Activity</th><th>Hours</th><th>Date</th><th>Subject</th></tr>
+  </th>
+  <tbody>
+    <% @orphans.each do |orph| %>
+      <tr>
+        <td><%= orph.code %></td>
+        <td><%= orph.project %></td>
+        <td><a href="<%= issue_url(orph.issue) %>"><%= orph.issue %></a></td>
+        <td><%= orph.user %></td>
+        <td><%= orph.activity %></td>
+        <td><%= orph.hours %></td>
+        <td><%= orph.date %></td>
+        <td><%= orph.descr %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+<% end %>

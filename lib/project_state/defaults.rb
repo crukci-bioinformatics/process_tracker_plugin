@@ -7,6 +7,8 @@ module ProjectStatePlugin
     CUSTOM_HOUR_LIMIT = "Hour Limit"
     CUSTOM_RESEARCHER_EMAIL = "Researcher Email"
     CUSTOM_ANALYST = "Analyst"
+    CUSTOM_ISS_COSTCODE = "Cost Centre"
+    CUSTOM_PROJ_COSTCODE = "Cost Centre"
 
     HOURS_PER_DAY = 7
 
