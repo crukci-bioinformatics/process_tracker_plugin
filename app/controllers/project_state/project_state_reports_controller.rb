@@ -618,8 +618,8 @@ class ProjectState::ProjectStateReportsController < ApplicationController
       @okay = set_up_time(params,false)
     else
       @okay = set_up_months(params,false)
+      @default_month = @fin_list[1]
     end
-    @default_month = @fin_list[1]
     @make_plot = false
   end
 
