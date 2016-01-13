@@ -1,8 +1,7 @@
 require 'logger'
 require 'i18n'
 
-$: << '/opt/redmine/ruby-2.2.2/lib/ruby/gems/2.2.0/gems'
-$: << '/opt/redmine/ruby-2.2.2/lib/ruby/gems/2.2.0/gems/simple_xlsx_reader-1.0.2/lib'
+require 'simple_xlsx_reader'
 require 'project_state/utils'
 require 'project_state/finance'
 
@@ -183,7 +182,7 @@ class ProjectState::ProjectStateReportsController < ApplicationController
           else
             @to = Date.parse(params['report_date_to'])
           end
-          if @okay
+          if okay
             @intervaltitle = "#{@from.strftime('%Y %b %-d')} to #{@to.strftime('%Y %b %-d')}"
           end
         rescue ArgumentError

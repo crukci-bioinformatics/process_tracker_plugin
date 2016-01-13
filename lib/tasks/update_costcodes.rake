@@ -1,6 +1,5 @@
 require 'i18n'
 
-$: << '/opt/redmine/ruby-2.2.2/lib/ruby/gems/2.2.0/gems/simple_xlsx_reader-1.0.2/lib'
 require 'simple_xlsx_reader'
 require_dependency File.expand_path(File.dirname(__FILE__)+'/../project_state/finance')
 require_dependency File.expand_path(File.dirname(__FILE__)+'/../project_state/utils')
