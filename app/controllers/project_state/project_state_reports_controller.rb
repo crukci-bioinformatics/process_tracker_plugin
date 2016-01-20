@@ -274,7 +274,7 @@ class ProjectState::ProjectStateReportsController < ApplicationController
   end
 
   def billable_time()
-    projlist = collectProjects(Setting.plugin_project_state['billable'])
+#    projlist = collectProjects(Setting.plugin_project_state['billable'])
     leavelist = collectProjects('Leave')
     @users = {}
     @times = {}
@@ -291,7 +291,7 @@ class ProjectState::ProjectStateReportsController < ApplicationController
     end
     ind = 0
     # can't use "find_each" here because it is incompatible with "order"
-    TimeEntry.where(spent_on: @from..(@ends[-1]-1)).order(:spent_on).each do |log|
+    TimeEntry.where(spent_on: @from..(@ends[-1]-1)).order(:spent_on).includes(:issue).each do |log|
       u = log.user_id
       next unless @users.has_key? u
       begin
@@ -303,10 +303,17 @@ class ProjectState::ProjectStateReportsController < ApplicationController
         $pslog.warn("AE: ends[-1]=#{@ends[-1]}  logdate=#{log.spent_on}")
         next
       end
-      if projlist.include? log.project_id
-        @times[u][ind] += log.hours
-      elsif leavelist.include? log.project_id
+#      if projlist.include? log.project_id
+#        @times[u][ind] += log.hours
+#      elsif leavelist.include? log.project_id
+#        @absent[u][ind] += log.hours
+      if leavelist.include? log.project_id
         @absent[u][ind] += log.hours
+      else
+        cc = log.issue.cost_centre
+        if !cc.nil? && !(cc == "")
+          @times[u][ind] += log.hours
+        end
       end
     end
     (0..(@ends.length - 1)).each do |i|
@@ -501,9 +508,17 @@ class ProjectState::ProjectStateReportsController < ApplicationController
     @current = []
     @average = []
     @pids = @projects.keys.sort{|a,b| @projects[a].name <=> @projects[b].name}
+    @current_show = []
+    @average_show = []
+    @labels_show = []
     @pids.each do |pid|
       @current << @times[pid][-1]
       @average << (@times[pid].sum / @times[pid].length).round(2)
+      if @current[-1] >= 1.0 || @average[-1] >= 1.0
+        @current_show << @current[-1]
+        @average_show << @average[-1]
+        @labels_show << @projects[pid].name
+      end
     end
     @avg_tag = "#{@labels.length} #{@interval_label} average"
     @cur_tag = @labels[-1]

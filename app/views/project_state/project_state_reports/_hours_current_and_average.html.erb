@@ -13,7 +13,7 @@ var chart = new Highcharts.Chart({
             text: '<%= @report.name + ": #{@intervaltitle}" %>'
         },
         xAxis: {
-            categories: <%=raw @labels %>
+            categories: <%=raw @labels_show %>
         },
         yAxis: {
             min: 0,
@@ -23,10 +23,10 @@ var chart = new Highcharts.Chart({
         },
         series: [
             { name: '<%= @avg_tag %>',
-              data: <%= @average %>
+              data: <%= @average_show %>
             },
             { name: '<%= @cur_tag %>',
-              data: <%= @current %> }
+              data: <%= @current_show %> }
         ],
         exporting: {
            scale: 3,
