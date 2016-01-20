@@ -35,4 +35,8 @@
    <%= text_field_tag 'settings[non_chargeable]', @settings['non_chargeable'] %>
 </p>
 
+<p><label for='settings_billable'><span title="<%= l(:settings_billable_descr) %>"><%= l(:settings_billable_label) %></span></label>
+   <%= text_field_tag 'settings[billable]', @settings['billable'] %>
+</p>
+
 <p><a href="/project_state/configure"><%= l(:conf_link) %></a></p>

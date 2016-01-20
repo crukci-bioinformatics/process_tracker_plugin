@@ -35,6 +35,8 @@ en:
   settings_log_file_descr: "Location where log messages specifically from the project state plugin will be written."
   settings_non_chargeable_label: "Non-chargeable activities"
   settings_non_chargeable_descr: "Time logged to these activities are not billed to research groups."
+  settings_billable_label: "Billable projects"
+  settings_billable_descr: "Projects (or parent projects) that are billable"
 
   flag_days_since_logged_time: "Days since logged time in state %{state}: %{actual} > %{threshold}"
   flag_days_in_state: "Days in state %{state}: %{actual} > %{threshold}"
