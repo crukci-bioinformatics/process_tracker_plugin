@@ -19,7 +19,8 @@ Redmine::Plugin.register :project_state do
                          'ignore_trackers' => 'Bug; Feature; Support; Other',
                          'non_chargeable' => 'Experimental Design Meetings; Statistics Clinic Meeting',
                          'holiday_url' => 'https://www.gov.uk/bank-holidays.json',
-                         'logfile' => '/var/log/redmine/project_state.log'},
+                         'logfile' => '/var/log/redmine/project_state.log',
+                         'billable' => 'Research Groups; Fitzgerald'},
            :partial => 'settings/project_state_settings' )
 
   menu :top_menu, :states, { controller: 'project_state/summary', action: 'index' }, caption: :project_state_caption, after: :myprojects

@@ -204,7 +204,7 @@ class ProjectState::ProjectStateReportsController < ApplicationController
     tod = Date.today
     @fin_list = (0..11).each.map do |i|
       m = tod << i
-      tag = "#{Date::ABBR_MONTHNAMES[m.month]}-#{m.strftime("%y")}"
+      tag = "#{Date::ABBR_MONTHNAMES[m.month]}-#{m.strftime("%Y")}"
     end
   end
 
@@ -274,7 +274,7 @@ class ProjectState::ProjectStateReportsController < ApplicationController
   end
 
   def billable_time()
-    projlist = collectProjects('Research Groups')
+    projlist = collectProjects(Setting.plugin_project_state['billable'])
     leavelist = collectProjects('Leave')
     @users = {}
     @times = {}
@@ -475,7 +475,7 @@ class ProjectState::ProjectStateReportsController < ApplicationController
     @times = {}
     @projects = {}
     rg_pid = Project.find_by(name: 'Research Groups').id
-    projlist = collectProjects("Research Groups")
+    projlist = collectProjects(Setting.plugin_project_state['billable'])
     projlist.delete(rg_pid)
     Project.where(id: projlist).each do |proj|
       @projects[proj.id] = proj
@@ -556,27 +556,33 @@ class ProjectState::ProjectStateReportsController < ApplicationController
     @default_month = params['report_fin_interval']
     (month,year) = params['report_fin_interval'].split('-')
     sheet = FinanceSheet.new(@tmp_spreadsheet)
-    data = sheet.retrieve(year,month)
+    data = sheet.retrieve(year[2..3],month)
     @grants = data[0]
     @codes = data[1]
     codemap = {}
     @codes.each_with_index{|c,i| codemap[c]=i}
     @costs = [0.0] * @codes.length
 
-    projects = collectProjects('Research Groups')
+    projects = collectProjects(Setting.plugin_project_state['billable'])
+    pstr = (projects.map{|x| sprintf("%d",x) }).join(",")
+    $pslog.debug("projects: #{pstr}")
     nc_activities = collectActivities(Setting.plugin_project_state['non_chargeable'])
     cfid = CustomField.find_by(type: 'IssueCustomField', name: 'Cost Centre').id
     p = Date.parse(params['report_fin_interval'])
     @from = p.beginning_of_month
     @to = p.end_of_month + 1
     @orphans = []
+    $pslog.debug("from: #{@from}")
+    $pslog.debug("to: #{@to}")
+    $pslog.debug("count: #{TimeEntry.where(spent_on: @from..@to).count}")
     TimeEntry.where(spent_on: @from..(@to-1)).includes(:project, :issue).each do |log|
+      $pslog.debug("te: #{log.issue_id}")
       next unless projects.include? log.project_id
       next if nc_activities.include? log.activity_id
       iss = log.issue
       code = iss.cost_centre
       ind = @codes.index(code)
-#      $pslog.debug("iss #{iss.id}  code=#{code}  ind=#{ind}")
+      $pslog.debug("iss #{iss.id}  code=#{code}  ind=#{ind}")
       if code.nil?
         $pslog.warn("Nobody to charge for time entry #{log.id}.")
         pn = Project.find(log.project_id).name
