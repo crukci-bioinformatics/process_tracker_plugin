@@ -11,43 +11,43 @@ module ProjectStatePlugin
     include ProjectStatePlugin::IssueFilter
     include ProjectStatePlugin::Utilities
 
-    def controller_issues_edit_before_save(**keys)
-      cvid = CustomField.find_by(name: "Project State").id
-      iss = keys[:issue]
-      cv = iss.custom_value_for(cvid)
-      $pslog.debug("CV pre: #{cv.value}")
-      cv.value = "Prepare"
-      STDERR.printf("ZORK ZORK ZORK\n")
-      keys[:params]["issue"]["custom_field_values"]["18"] = "Prepare"
+#    def controller_issues_edit_before_save(**keys)
+#      cvid = CustomField.find_by(name: "Project State").id
+#      iss = keys[:issue]
+#      cv = iss.custom_value_for(cvid)
+#      $pslog.debug("CV pre: #{cv.value}")
+#      cv.value = "Prepare"
+#      STDERR.printf("ZORK ZORK ZORK\n")
+#      keys[:params]["issue"]["custom_field_values"]["18"] = "Prepare"
       
-      iss.custom_field_values = {"18" => "Prepare"}
-      $pslog.debug("Keys:")
-      keys.each do |k,v|
-        if k == :params
-          v.each do |p,v1|
-            next if p == "issue"
-            $pslog.debug("param: '#{p}' [#{p.class}] --> #{v1}")
-          end
-        elsif k == :journal
-          $pslog.debug("journal: #{v.journalized_type}, #{v.user_id}")
-          v.details.each do |d|
-            $pslog.debug("  jd: #{d.property}:#{d.prop_key} #{old_value} -> #{new_value}")
-          end
-        elsif k == :issue
-          v.custom_values.each do |cv|
-            $pslog.debug("CV: #{cv.custom_field_id} == #{cv.value}")
-          end
+#      iss.custom_field_values = {"18" => "Prepare"}
+#      $pslog.debug("Keys:")
+#      keys.each do |k,v|
+#        if k == :params
+#          v.each do |p,v1|
+#            next if p == "issue"
+#            $pslog.debug("param: '#{p}' [#{p.class}] --> #{v1}")
+#          end
+#        elsif k == :journal
+#          $pslog.debug("journal: #{v.journalized_type}, #{v.user_id}")
+#          v.details.each do |d|
+#            $pslog.debug("  jd: #{d.property}:#{d.prop_key} #{old_value} -> #{new_value}")
+#          end
+#        elsif k == :issue
+#          v.custom_values.each do |cv|
+#            $pslog.debug("CV: #{cv.custom_field_id} == #{cv.value}")
+#          end
 #          $pslog.debug("Methods: #{v.methods.sort}")
-        elsif k == :request
-          $pslog.debug("Request: #{v.inspect}")
-        else
-          $pslog.debug("#{k} --> #{v}")
-        end
-      end
+#        elsif k == :request
+#          $pslog.debug("Request: #{v.inspect}")
+#        else
+#          $pslog.debug("#{k} --> #{v}")
+#        end
+#      end
 #      $pslog.debug("issue: #{issue.id}")
 #      $pslog.debug("cv's: #{issue.custom_values}")
 #      $pslog.debug("journal: #{journal}")
-    end
+#    end
 
     def controller_issues_new_after_save(context={})
      begin
