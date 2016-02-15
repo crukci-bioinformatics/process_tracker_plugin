@@ -91,6 +91,13 @@ en:
   report_states_yaxis: "Number of Projects"
   report_fin_label: "Month"
   report_fin_fileupload: "Finance Spreadsheet"
+  report_oc_opening: "Opening"
+  report_oc_closing: "Closing"
+  report_oc_reopening: "Re-opening"
+  report_waiting_y: "Time in State"
+  report_waiting_ready: "Ready"
+  report_waiting_hold: "Hold"
+  report_waiting_yaxis: "Days in State"
 
   label_last_12: "last 12 months"
   label_last_6: "last 6 months"
@@ -104,3 +111,4 @@ en:
   label_by_week: "by week"
   label_by_quarter: "by quarter"
   label_interval_type: "Interval"
+

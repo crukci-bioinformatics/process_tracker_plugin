@@ -1,0 +1,60 @@
+<script>
+var chart = new Highcharts.Chart({
+        chart: {
+            type: 'boxplot',
+            renderTo: 'chart_container'
+        },
+        title: {
+            text: '<%= @report.name + ": #{@intervaltitle}" %>'
+        },
+        xAxis: {
+            categories: <%=raw @labels %>
+        },
+        yAxis: {
+            title: {
+                text: '<%= l(:report_waiting_yaxis) %>'
+            }
+        },
+        plotOptions: {
+          series: {
+            animation: false
+          }
+        },
+        series: [
+            { name: '<%= l(:report_waiting_ready) %>',
+              data: <%= @ready %>,
+              visible: true
+            },
+            { name: '<%= l(:report_waiting_hold) %>',
+              data: <%= @hold %>,
+              visible: true
+            }
+        ],
+        exporting: {
+           scale: 3,
+           fallbackToExportServer: false
+       }
+
+});
+</script>
+
+<h3>Tabular View</h3>
+
+<table id="ps_counts">
+  <thead>
+    <tr>
+      <th></th>
+      <th><%= l(:report_waiting_ready) %></th>
+      <th><%= l(:report_waiting_hold) %></th>
+    </tr>
+  </thead>
+  <tbody>
+    <% (0..(@labels.length-1)).each do |i| %>
+      <tr>
+        <td><%= @labels[i] %></td>
+        <td><%= @ready[i] %></td>
+        <td><%= @hold[i] %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

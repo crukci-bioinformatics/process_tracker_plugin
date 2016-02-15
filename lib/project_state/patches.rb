@@ -49,6 +49,15 @@ module ProjectStatePlugin
           return nil if code.nil?
           return code.value == "" ? nil : code.value
         end
+
+        def researcher
+          cf = IssueCustomField.find_by(name: CUSTOM_RESEARCHER_EMAIL)
+          email = self.custom_values.find_by(custom_field: cf)
+          return nil if email.nil?
+          elist = email.value.split(';').map{ |t| t.strip }.select{|t| t.length > 0}
+          email = elist.length == 0 ? nil : elist[0]
+          return email == "" ? nil : email
+        end
       end
     end
   end

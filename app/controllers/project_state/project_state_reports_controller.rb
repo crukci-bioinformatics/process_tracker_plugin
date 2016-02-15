@@ -1,9 +1,11 @@
 require 'logger'
 require 'i18n'
+require 'set'
 
 require 'simple_xlsx_reader'
 require 'project_state/utils'
 require 'project_state/finance'
+require 'project_state/snapshot'
 
 class ProjectState::ProjectStateReportsController < ApplicationController
   include ProjectStatePlugin::Utilities
@@ -28,77 +30,6 @@ class ProjectState::ProjectStateReportsController < ApplicationController
     return [[l(:label_by_month),"by_month"],
             [l(:label_by_week),"by_week"],
             [l(:label_by_quarter),"by_quarter"]]
-  end
-
-  class Snapshot
-    include ProjectStatePlugin::Utilities
-
-    def initialize(projects)
-      @owners = {}
-      @states = {}
-      @statuses = {}
-      @trackers = {}
-      @open = IssueStatus.where(is_closed: false).map{|x| x.id}
-      tnames = semiString2List(Setting.plugin_project_state['ignore_trackers'])
-      @trackers_ignore = Tracker.where(name: tnames).map{|t| t.id}
-      @state_field = CustomField.find_by(name: 'Project State').id.to_s
-      Issue.where(project_id: projects).where(status: @open).includes(:custom_values).each do |iss|
-        id = iss.id
-        @owners[id] = iss.assigned_to_id
-        @states[id] = iss.state
-        @statuses[id] = iss.status_id
-        @trackers[id] = iss.tracker_id
-      end
-    end
-
-    def journal(iss,j)
-      if ! @owners.has_key?(iss.id)
-        @owners[iss.id] = iss.assigned_to_id
-        @states[iss.id] = iss.state
-        @statuses[iss.id] = iss.status_id
-        @trackers[iss.id] = iss.tracker_id
-      end
-      j.details.each do |jd|
-        if jd.property == 'cf' && jd.prop_key == @state_field
-          $pslog.warn("Inconsistency: issue=#{iss.id}  jstate=#{jd.value}  istate=#{@states[iss.id]}") if jd.value != @states[iss.id]
-#          $pslog.debug("issue #{iss.id} state -> '#{jd.old_value}'")
-          @states[iss.id] = jd.old_value
-        elsif jd.property=='attr' && jd.prop_key=='assigned_to_id'
-          $pslog.warn("Inconsistency: issue=#{iss.id}  jowner=#{jd.value}  iowner=#{@owners[iss.id]}") if ((!jd.value.nil?) && (jd.value.to_i != @owners[iss.id]))
-#          $pslog.debug("issue #{iss.id} owner -> '#{jd.old_value}'")
-          @owners[iss.id] = jd.old_value.to_i
-        elsif jd.property=='attr' && jd.prop_key=='status_id'
-          $pslog.warn("Inconsistency: issue=#{iss.id}  jstatus=#{jd.value}  istatus=#{@statuses[iss.id]}") if jd.value.to_i != @statuses[iss.id]
-#          $pslog.debug("issue #{iss.id} status -> '#{jd.old_value}'")
-          @statuses[iss.id] = jd.old_value.to_i
-        elsif jd.property=='attr' && jd.prop_key=='tracker_id'
-          $pslog.warn("Inconsistency: issue=#{iss.id}  jtracker=#{jd.value}  itracker=#{@trackers[iss.id]}") if ((!jd.value.nil?) && (jd.value.to_i != @trackers[iss.id]))
-#          $pslog.debug("issue #{iss.id} tracker -> '#{jd.old_value}'")
-          @trackers[iss.id] = jd.old_value.to_i
-        end
-      end
-    end
-
-    def snap_states
-      counts = Hash.new(0)
-      @states.keys.each do |k|
-        next if @trackers_ignore.include? @trackers[k]
-        counts[@states[k]] = counts[@states[k]] + 1 if @open.include?(@statuses[k])
-      end
-      return counts
-    end
-
-    def snap_people(state)
-      counts = Hash.new(0)
-      @states.keys.each do |k|
-        next if @trackers_ignore.include? @trackers[k]
-        if @states[k] == state && @open.include?(@statuses[k])
-          counts[@owners[k]] = counts[@owners[k]] + 1
-        end
-      end
-      return counts
-    end
-
   end
 
   def set_up_time(params,update)
@@ -224,6 +155,7 @@ class ProjectState::ProjectStateReportsController < ApplicationController
       @interval_label = 'month'
     when 'by_week'
       current = current.beginning_of_week
+      @from = current
       while current < (real_to - 7)
         lweek = current + 6
         @labels << "W#{lweek.cweek}, #{Date::ABBR_MONTHNAMES[lweek.month]} #{lweek.day}"
@@ -355,7 +287,7 @@ class ProjectState::ProjectStateReportsController < ApplicationController
 
   def number_in_state
     projects = collectProjects(Setting.plugin_project_state['root_projects'])
-    snapshot = Snapshot.new(projects)
+    snapshot = ProjectStatePlugin::Snapshot.new(projects)
     fid = CustomField.find_by(name: 'Project State').id.to_s
     today = Date.today
     ind = @ends.length - 1
@@ -399,7 +331,7 @@ class ProjectState::ProjectStateReportsController < ApplicationController
     projects = collectProjects(Setting.plugin_project_state['root_projects'])
     today = Date.today
     ind = @ends.length - 1
-    snap = Snapshot.new(projects)
+    snap = ProjectStatePlugin::Snapshot.new(projects)
     @counts = {}
     @analysts = {}
     Group.find_by(lastname: 'Bioinformatics Core').users.each do |u|
@@ -447,10 +379,8 @@ class ProjectState::ProjectStateReportsController < ApplicationController
   end
 
   def collapse_project(p)
-    $pslog.debug("Checking #{p.name}...")
     p.children.each do |kid|
       collapse_project(kid)
-      $pslog.debug("Collapsing #{kid.name}...")
       src = @times[kid.id]
       dst = @times[p.id]
       (0..(src.length-1)).each {|i| dst[i] = dst[i] + src[i]}
@@ -478,7 +408,6 @@ class ProjectState::ProjectStateReportsController < ApplicationController
   end
 
   def hours_current_and_average
-    $pslog.debug("Starting report...")
     @times = {}
     @projects = {}
     rg_pid = Project.find_by(name: 'Research Groups').id
@@ -529,6 +458,104 @@ class ProjectState::ProjectStateReportsController < ApplicationController
     @make_plot = true
   end
 
+  class StateChange < Struct.new(:projid,:issue,:from,:to,:when)
+  end
+
+  def state_changes(iss,state_prop_key)
+    changes = []
+    iss.journals.includes(:details).each do |j|
+      j.details.each do |jd|
+        if jd.property == 'cf' && jd.prop_key == state_prop_key
+          changes << StateChange.new(iss.project_id,iss,jd.old_value,jd.value,j.created_on)
+        end
+      end
+    end
+    return changes
+  end
+
+  def find_previous_change(issue,finish,psid)
+    jlist = issue.journals.where("created_on < ?",finish).order(created_on: :desc).includes(:details)
+    jlist.each do |j|
+      j.details.each do |jd|
+        if jd.property == 'cf' && jd.prop_key == psid
+          return j.created_on
+        end
+      end
+    end
+    return issue.created_on
+  end
+
+  def time_waiting()
+    @projects = {}
+    projlist = collectProjects(Setting.plugin_project_state['billable'])
+    Project.where(id: projlist).each do |proj|
+      @projects[proj.id] = proj
+    end
+    state_prop_key = CustomField.find_by(name: 'Project State').id.to_s
+    interesting = ["Ready","Hold"]
+    start = @from
+    rlist = []
+    hlist = []
+    @ready = []
+    @hold = []
+    @ends.each do |fin|
+      Journal.where(created_on: start..(fin-1)).includes(:details).each do |j|
+        iss = j.issue
+        next unless @projects.include? iss.project_id
+        j.details.each do |jd|
+          if jd.property == 'cf' && jd.prop_key == state_prop_key && interesting.include?(jd.old_value)
+            # it's a candidate
+            prev = find_previous_change(j.issue,j.created_on,state_prop_key)
+            interval = ((j.created_on - prev).to_i / 86400.0).round(2)
+            $pslog.debug("From: #{prev}  To: #{j.created_on}  Interval: #{interval}")
+            $pslog.debug("From: #{prev.class}  To: #{j.created_on.class}  Interval: #{interval.class}")
+            if jd.old_value == 'Ready'
+              rlist << interval
+            else
+              hlist << interval
+            end
+          end
+        end
+      end
+      @ready << boxplot_values(rlist)
+      @hold << boxplot_values(hlist)
+      rlist = []
+      hlist = []
+      start = fin
+    end
+    @make_plot = true
+  end
+
+  def opening_closing()
+    start = @from
+    @opening = []
+    @closing = []
+    @reopening = []
+    state_prop_key = CustomField.find_by(name: 'Project State').id.to_s
+    @ends.each do |fin|
+      s = Set.new
+      f = Set.new
+      r = Set.new
+      Journal.where(created_on: start..(fin-1)).each do |j|
+        j.details.each do |jd|
+          if jd.property == 'cf' && jd.prop_key == state_prop_key
+#            s += 1 if jd.old_value == 'new'
+#            f += 1 if jd.value == 'Post'
+#            r += 1 if jd.old_value == 'Post'
+            s.add(j.journalized_id) if jd.old_value == 'new'
+            f.add(j.journalized_id) if jd.value == 'Post'
+            r.add(j.journalized_id) if jd.old_value == 'Post'
+          end
+        end
+      end
+      @opening << s.size
+      @closing << f.size
+      @reopening << r.size
+      start = fin
+    end
+    @make_plot = true
+  end
+
   def finance_report_csv
     io = StringIO.new(string="",mode="w")
     io.printf("Grant,Code,Hours\n")
@@ -553,10 +580,6 @@ class ProjectState::ProjectStateReportsController < ApplicationController
   end
 
   def finance_report
-    $pslog.debug("Starting report...")
-    $pslog.debug("File: #{params['spreadsheet'].class}")
-    $pslog.debug("Month: #{params['report_fin_interval']}")
-    $pslog.debug("Keys: #{params.keys.join(",")}")
     if params['spreadsheet'].nil?
       flash[:error] = 'Please choose a spreadsheet.'
       @okay = false
@@ -580,24 +603,18 @@ class ProjectState::ProjectStateReportsController < ApplicationController
 
     projects = collectProjects(Setting.plugin_project_state['billable'])
     pstr = (projects.map{|x| sprintf("%d",x) }).join(",")
-    $pslog.debug("projects: #{pstr}")
     nc_activities = collectActivities(Setting.plugin_project_state['non_chargeable'])
     cfid = CustomField.find_by(type: 'IssueCustomField', name: 'Cost Centre').id
     p = Date.parse(params['report_fin_interval'])
     @from = p.beginning_of_month
     @to = p.end_of_month + 1
     @orphans = []
-    $pslog.debug("from: #{@from}")
-    $pslog.debug("to: #{@to}")
-    $pslog.debug("count: #{TimeEntry.where(spent_on: @from..@to).count}")
     TimeEntry.where(spent_on: @from..(@to-1)).includes(:project, :issue).each do |log|
-      $pslog.debug("te: #{log.issue_id}")
       next unless projects.include? log.project_id
       next if nc_activities.include? log.activity_id
       iss = log.issue
       code = iss.cost_centre
       ind = @codes.index(code)
-      $pslog.debug("iss #{iss.id}  code=#{code}  ind=#{ind}")
       if code.nil?
         $pslog.warn("Nobody to charge for time entry #{log.id}.")
         pn = Project.find(log.project_id).name

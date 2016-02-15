@@ -157,6 +157,32 @@ module ProjectStatePlugin
       end
       return matches.length > 0 ? matches[0] : nil
     end
+
+    def boxplot_values(data)
+      if data.length == 0
+        return [0,0,0,0,0]
+      elsif data.length == 1
+        return [data[0],data[0],data[0],data[0],data[0]]
+      elsif data.length == 2
+        return [data[0],data[0],(data[0]+data[1])/2.0,data[1],data[1]]
+      end
+      ds = data.sort
+      $pslog.debug("data [#{ds.length}]: #{ds}")
+      min = ds[0]
+      max = ds[-1]
+      if ds.length % 2 == 1 # odd length
+        med = ds[ds.length/2]
+      else
+        med = (ds[ds.length/2] + ds[ds.length/2+1]) / 2.0
+      end
+      med = med.round(2)
+      quart = ds.length / 4
+      first = ds[quart]
+      third  = ds[quart*3]
+      $pslog.debug("results: #{min} #{first} #{med} #{third} #{max}")
+      return [min,first,med,third,max]
+    end
+
   end
 
 end

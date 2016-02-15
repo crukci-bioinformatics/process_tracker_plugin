@@ -1,0 +1,65 @@
+<script>
+var chart = new Highcharts.Chart({
+        chart: {
+            renderTo: 'chart_container'
+        },
+        title: {
+            text: '<%= @report.name + ": #{@intervaltitle}" %>'
+        },
+        xAxis: {
+            categories: <%=raw @labels %>
+        },
+        yAxis: {
+            title: {
+                text: '<%= l(:report_states_yaxis) %>'
+            }
+        },
+        plotOptions: {
+          series: {
+            animation: false
+          }
+        },
+        series: [
+            { name: '<%= l(:report_oc_opening) %>',
+              data: <%= @opening %>,
+              visible: true
+            },
+            { name: '<%= l(:report_oc_closing) %>',
+              data: <%= @closing %>,
+              visible: true
+            },
+            { name: '<%= l(:report_oc_reopening) %>',
+              data: <%= @reopening %>,
+              visible: true
+            }
+        ],
+        exporting: {
+           scale: 3,
+           fallbackToExportServer: false
+       }
+
+});
+</script>
+
+<h3>Tabular View</h3>
+
+<table id="ps_counts">
+  <thead>
+    <tr>
+      <th></th>
+      <th>Opening</th>
+      <th>Closing</th>
+      <th>Re-opening</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% (0..(@labels.length-1)).each do |i| %>
+      <tr>
+        <td><%= @labels[i] %></td>
+        <td><%= @opening[i] %></td>
+        <td><%= @closing[i] %></td>
+        <td><%= @reopening[i] %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

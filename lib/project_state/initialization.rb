@@ -218,6 +218,20 @@ module ProjectStatePlugin
           ps.dateview = 'form_charging'
           ps.want_interval = false
         end
+        ProjectStateReport.find_or_create_by(name: "Time Waiting") do |ps|
+          $pslog.info("Creating Time Waiting Report")
+          ps.ordering = 9
+          ps.view = "time_waiting"
+          ps.dateview = 'form_dates'
+          ps.want_interval = true
+        end
+        ProjectStateReport.find_or_create_by(name: "Opening and Closing") do |ps|
+          $pslog.info("Creating Opening/Closing Report")
+          ps.ordering = 10
+          ps.view = "opening_closing"
+          ps.dateview = 'form_dates'
+          ps.want_interval = true
+        end
       rescue
         $pslog.debug("Populate reports later.")
       end
