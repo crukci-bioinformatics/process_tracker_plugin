@@ -16,9 +16,6 @@ module ProjectStatePlugin
 #      iss = keys[:issue]
 #      cv = iss.custom_value_for(cvid)
 #      $pslog.debug("CV pre: #{cv.value}")
-#      cv.value = "Prepare"
-#      STDERR.printf("ZORK ZORK ZORK\n")
-#      keys[:params]["issue"]["custom_field_values"]["18"] = "Prepare"
       
 #      iss.custom_field_values = {"18" => "Prepare"}
 #      $pslog.debug("Keys:")
