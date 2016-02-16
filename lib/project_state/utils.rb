@@ -159,15 +159,15 @@ module ProjectStatePlugin
     end
 
     def boxplot_values(data)
+      ds = data.sort
+      $pslog.debug("data [#{ds.length}]: #{ds}")
       if data.length == 0
         return [0,0,0,0,0]
       elsif data.length == 1
         return [data[0],data[0],data[0],data[0],data[0]]
       elsif data.length == 2
-        return [data[0],data[0],(data[0]+data[1])/2.0,data[1],data[1]]
+        return [ds[0],ds[0],((ds[0]+ds[1])/2.0).round(2),ds[1],ds[1]]
       end
-      ds = data.sort
-      $pslog.debug("data [#{ds.length}]: #{ds}")
       min = ds[0]
       max = ds[-1]
       if ds.length % 2 == 1 # odd length

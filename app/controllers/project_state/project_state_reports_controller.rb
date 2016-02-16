@@ -507,7 +507,7 @@ class ProjectState::ProjectStateReportsController < ApplicationController
             # it's a candidate
             prev = find_previous_change(j.issue,j.created_on,state_prop_key)
             interval = ((j.created_on - prev).to_i / 86400.0).round(2)
-#            $pslog.debug("From: #{prev}  To: #{j.created_on}  Interval: #{interval}")
+#            $pslog.debug("Iss: #{iss.id} [#{jd.old_value}] -- From: #{prev}  To: #{j.created_on}  Interval: #{interval}")
 #            $pslog.debug("From: #{prev.class}  To: #{j.created_on.class}  Interval: #{interval.class}")
             if jd.old_value == 'Ready'
               rlist << interval
