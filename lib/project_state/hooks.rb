@@ -100,7 +100,7 @@ module ProjectStatePlugin
       uaddr = u.email_address.address
       alist.delete(uaddr)
       if alist.length > 0
-        send_the_email(info,u,issue,alist)
+        send_the_mail(info,u,issue,alist)
       end
     end
  
