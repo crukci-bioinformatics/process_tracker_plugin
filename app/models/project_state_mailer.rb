@@ -13,12 +13,20 @@ class ProjectStateMailer < ActionMailer::Base
     begin
       subs = []
       if notes.has_key?(:hours_new)
-        subs << l(:email_hour_limit_subj,:hours_old => notes[:hours_old],
-                                         :hours_new => notes[:hours_new])
+        if notes[:is_new_issue]
+          subs << l(:email_hour_limit_subj_new,:hours_new => notes[:hours_new])
+        else
+          subs << l(:email_hour_limit_subj,:hours_old => notes[:hours_old],
+                                           :hours_new => notes[:hours_new])
+        end
       end
       if notes.has_key?(:timeout_new)
-        subs << l(:email_state_timeout_subj,:timeout_old => notes[:timeout_old],
-                                            :timeout_new => notes[:timeout_new])
+        if notes[:is_new_issue]
+          subs << l(:email_state_timeout_subj_new,:timeout_new => notes[:timeout_new])
+        else
+          subs << l(:email_state_timeout_subj,:timeout_old => notes[:timeout_old],
+                                              :timeout_new => notes[:timeout_new])
+        end
       end
       sub = l(:text_issue) + " #{issue.id}: " + subs.join(', ')
       mail(to: notes[:email], subject: sub)

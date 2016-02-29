@@ -8,6 +8,19 @@ module ProjectStatePlugin
       base.class_eval do
         has_many :state_journals
 
+        before_validation :ensure_valid_project_state
+        def ensure_valid_project_state
+          psid = CustomField.find_by(name: CUSTOM_PROJECT_STATE).id
+          cf = custom_field_values.select{|x| x.custom_field_id == psid}
+          return if cf.nil?
+          return if cf.is_a?(Array) && cf.length == 0
+          cf = cf[0] if cf.is_a?(Array)
+          cf_changed = cf.value_was != cf.value
+          if cf_changed && !status_id_changed? 
+            errors.add("Project State"," must not be changed directly.")
+          end
+        end
+
         def state
           cfid = IssueCustomField.find_by(name: CUSTOM_PROJECT_STATE).id
           s = CustomValue.find_by(customized: self, custom_field_id: cfid)
@@ -74,48 +87,54 @@ module ProjectStatePlugin
     end
   end
 
-  module CustomValuePatch
-    include ProjectStatePlugin::Defaults
+#########
+# No longer used, but we might want it back someday.
+#
+#  module CustomValuePatch
+#    include ProjectStatePlugin::Defaults
+#
+#    def self.included(base)
+#      base.class_eval do
+#        before_validation :ensure_state_change_permitted
+#        def ensure_state_change_permitted
+#          u = User.current
+#          sol = User.find_by(login: 'solexa')
+#          cfid = CustomField.find_by(name: CUSTOM_PROJECT_STATE).id
+#          returnval = true
+#          if u == sol && self.custom_field_id == cfid
+#            o = CustomValue.find(self.id)
+#            returnval = ORDERING[o.value] < ORDERING[self.value]
+#          end
+#          return returnval
+#        end
+#      end
+#    end
+#  end
 
-    def self.included(base)
-      base.class_eval do
-        before_validation :ensure_state_change_permitted
-        def ensure_state_change_permitted
-          u = User.current
-          sol = User.find_by(login: 'solexa')
-          cfid = CustomField.find_by(name: CUSTOM_PROJECT_STATE).id
-          returnval = true
-          if u == sol && self.custom_field_id == cfid
-            o = CustomValue.find(self.id)
-            returnval = ORDERING[o.value] < ORDERING[self.value]
-          end
-          return returnval
-        end
-      end
-    end
-  end
-
-  module JournalPatch
-    include ProjectStatePlugin::Defaults
-    def self.included(base)
-      base.class_eval do
-        before_validation :ensure_state_change_permitted
-        def ensure_state_change_permitted
-          u = User.current
-          sol = User.find_by(login: 'solexa')
-          cfid = CustomField.find_by(name: CUSTOM_PROJECT_STATE).id
-          returnval = true
-          if u == sol
-            self.details.each do |d|
-              if d.prop_key.to_i == cfid
-                returnval = ORDERING[d.old_value] < ORDERING[d.value]
-              end
-            end
-          end
-          return returnval
-        end
-      end
-    end
-  end
+#########
+# No longer used, but we might want it back someday.
+#
+#  module JournalPatch
+#    include ProjectStatePlugin::Defaults
+#    def self.included(base)
+#      base.class_eval do
+#        before_validation :ensure_state_change_permitted
+#        def ensure_state_change_permitted
+#          u = User.current
+#          sol = User.find_by(login: 'solexa')
+#          cfid = CustomField.find_by(name: CUSTOM_PROJECT_STATE).id
+#          returnval = true
+#          if u == sol
+#            self.details.each do |d|
+#              if d.prop_key.to_i == cfid
+#                returnval = ORDERING[d.old_value] < ORDERING[d.value]
+#              end
+#            end
+#          end
+#          return returnval
+#        end
+#      end
+#    end
+#  end
 
 end

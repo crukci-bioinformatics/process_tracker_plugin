@@ -3,7 +3,7 @@ en:
   project_state_caption: "ProjectStates"
   project_my_state_caption: "MyStates"
   project_state_title: "Project State Summary"
-  filter_report_link: "The Reports of Madison County"
+  filter_report_link: "Escape from Reports"
   regular_report_link: "The Regular Report"
   project_reports_title: "Project State Reports"
   project_reports_caption: "Reports"
@@ -45,9 +45,11 @@ en:
   flag_status_state_mismatch: "Mismatch: status = '%{status}' but state = '%{state}'"
 
   email_hour_limit_subj: "Hour limit %{hours_old} --> %{hours_new}"
+  email_hour_limit_subj_new: "Hour limit %{hours_new}"
   email_hour_limit: "'Hours Logged' limit raised to %{hours_new} from %{hours_old} by %{uname}."
   email_hour_actual: "Hours Logged (actual): %{total_spent_hours}"
   email_state_timeout_subj: "State timeout %{timeout_old} --> %{timeout_new}"
+  email_state_timeout_subj_new: "State timeout %{timeout_new}"
 
   text_issue: "Issue"
   text_project: "Project"

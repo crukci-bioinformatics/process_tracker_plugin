@@ -1,12 +1,20 @@
 <p>Issue <a href="<%= @url %>"><%= @issue.id %></a>: <%= @issue.subject %></p>
 
 <% if @notes.has_key?(:hours_new) %>
-  <p>"Hours Logged" limit raised to <%= @notes[:hours_new] %> from <%= @notes[:hours_old].blank? ? "<empty>" : @notes[:hours_old] %> by <%= @notes[:uname] %>.</p>
+  <% if @notes[:is_new_issue] %>
+    <p>"Hours Logged" limit set to <%= @notes[:hours_new] %> by <%= @notes[:uname] %>.</p>
+  <% else %>
+    <p>"Hours Logged" limit raised to <%= @notes[:hours_new] %> from <%= @notes[:hours_old].blank? ? "<empty>" : @notes[:hours_old] %> by <%= @notes[:uname] %>.</p>
+  <% end %>
   <p>Hours Logged (actual): <%= @issue.total_spent_hours %></p>
 <% end %>
 
 <% if @notes.has_key?(:timeout_new) %>
-  <p>"State Timeout" limit raised to <%= @notes[:timeout_new] %> from <%= @notes[:timeout_old].blank? ? "<empty>" : @notes[:timeout_old] %> by <%= @notes[:uname] %>.</p>
+  <% if @notes[:is_new_issue] %>
+    <p>"State Timeout" limit set to <%= @notes[:timeout_new] %> by <%= @notes[:uname] %>.</p>
+  <% else %>
+    <p>"State Timeout" limit raised to <%= @notes[:timeout_new] %> from <%= @notes[:timeout_old].blank? ? "<empty>" : @notes[:timeout_old] %> by <%= @notes[:uname] %>.</p>
+  <% end %>
   <p>Days in State (actual): <%= @notes[:days] %> (if "Active", days since last logged time)</p>
 <% end %>
 

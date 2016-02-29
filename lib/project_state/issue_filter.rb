@@ -62,7 +62,8 @@ module ProjectStatePlugin
   
   
       # unassigned but past Prepare
-      if issue.assigned_to.nil? && issue.state != 'Prepare'
+	  bad = ['Ready','Active']
+      if issue.assigned_to.nil? && bad.include?(issue.state)
         flags << l(:flag_analyst_unassigned,
                    :state => issue.state)
       end

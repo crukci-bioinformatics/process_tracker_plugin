@@ -6,179 +6,13 @@ require 'simple_xlsx_reader'
 require 'project_state/utils'
 require 'project_state/finance'
 require 'project_state/snapshot'
+require 'project_state/reports'
 
 class ProjectState::ProjectStateReportsController < ApplicationController
   include ProjectStatePlugin::Utilities
+  include ProjectStatePlugin::Reports
 
   unloadable
-
-  def ps_options_for_period
-    return [[l(:label_last_12),"last_12"],
-            [l(:label_last_6),"last_6"],
-            [l(:label_last_3),"last_3"],
-            [l(:label_this_year),"this_year"],
-            [l(:label_last_year),"last_year"],
-            [l(:label_this_fiscal),"this_fiscal"],
-            [l(:label_last_fiscal),"last_fiscal"],
-            [l(:label_this_quarter),"this_quarter"],
-            [l(:label_last_quarter),"last_quarter"],
-            [l(:label_this_month),"this_month"],
-            [l(:label_last_month),"last_month"]]
-  end
-
-  def ps_options_for_interval
-    return [[l(:label_by_month),"by_month"],
-            [l(:label_by_week),"by_week"],
-            [l(:label_by_quarter),"by_quarter"]]
-  end
-
-  def set_up_time(params,update)
-    okay = true
-    if update
-      if ! params.has_key? "date_type"
-        flash[:warning] = l(:report_choose_radio_button)
-        okay = false
-      elsif params['date_type'] == '1'
-        case params['period_type']
-        when 'last_12'
-          @to = Date.today.beginning_of_month
-          @from = @to << 12
-          @intervaltitle = "#{@from.strftime('%Y %b')} to #{@to.strftime('%Y %b')}"
-        when 'last_6'
-          @to = Date.today.beginning_of_month
-          @from = @to << 6
-          @intervaltitle = "#{@from.strftime('%Y %b')} to #{@to.strftime('%Y %b')}"
-        when 'last_3'
-          @to = Date.today.beginning_of_month
-          @from = @to << 3
-          @intervaltitle = "#{@from.strftime('%Y %b')} to #{@to.strftime('%Y %b')}"
-        when 'last_month'
-          @to = Date.today.beginning_of_month
-          @from = @to << 1
-          @intervaltitle = "#{@from.strftime('%Y %b %-d')} to #{@to.strftime('%Y %b %-d')}"
-        when 'this_month'
-          @to = Date.today.end_of_month + 1
-          @from = Date.today.beginning_of_month
-          @intervaltitle = "#{@from.strftime('%Y %b %-d')} to #{@to.strftime('%Y %b %-d')}"
-        when 'this_year'
-          @to = Date.today.end_of_year + 1
-          @from = Date.today.beginning_of_year
-          @intervaltitle = "#{@from.strftime('%Y')}"
-        when 'last_year'
-          @to = Date.today.beginning_of_year
-          @from = @to << 12
-          @intervaltitle = "#{@from.strftime('%Y')}"
-        when 'this_fiscal'
-          t = Date.today
-          apr = Date.new(year=t.year,month=4)
-          offset = t < apr ? -1 : 0
-          @from = Date.new(year=t.year+offset,month=4)
-          @to = Date.new(year=t.year+offset+1,month=4)
-          @intervaltitle = "#{@from.strftime('%Y %b')} to #{@to.strftime('%Y %b')}"
-        when 'last_fiscal'
-          t = Date.today
-          apr = Date.new(year=t.year,month=4)
-          offset = t < apr ? -2 : -1
-          @from = Date.new(year=t.year+offset,month=4)
-          @to = Date.new(year=t.year+offset+1,month=4)
-          @intervaltitle = "#{@from.strftime('%Y %b')} to #{@to.strftime('%Y %b')}"
-        when 'this_quarter'
-          @to = Date.today.end_of_quarter+1
-          @from = Date.today.beginning_of_quarter
-          @intervaltitle = "#{@from.strftime('%Y %b')} to #{@to.strftime('%Y %b')}"
-        when 'last_quarter'
-          @to = Date.today.beginning_of_quarter
-          @from = @to << 3
-          @intervaltitle = "#{@from.strftime('%Y %b')} to #{@to.strftime('%Y %b')}"
-        else
-          $pslog.error("Unexpected period description: '#{params['period_type']}'")
-          flash[:error] = l(:report_bad_period_descr,:period => params['period_type'])
-          okay = false
-        end
-        if okay
-          params['report_date_to'] = "%s" % @to
-          params['report_date_from'] = "%s" % @from
-        end
-      elsif params['date_type'] == '2'
-        begin
-          if !params.has_key?('report_date_from') or params['report_date_from'].blank?
-            flash[:warning] = l(:report_choose_from_date)
-            okay = false
-          else
-            @from = Date.parse(params['report_date_from'])
-          end
-          if !params.has_key?('report_date_to') or params['report_date_to'].blank?
-            flash[:notice] = l(:report_choose_to_date)
-            @to = Date.today
-          else
-            @to = Date.parse(params['report_date_to'])
-          end
-          if okay
-            @intervaltitle = "#{@from.strftime('%Y %b %-d')} to #{@to.strftime('%Y %b %-d')}"
-          end
-        rescue ArgumentError
-          flash[:error] = l(:report_date_format_error)
-          okay = false
-        end
-      else
-        $pslog.error("Unexpected date type '#{date_type}'")
-        flash[:error] = l(:report_bad_date_type,:datetype => params['date_type'])
-        okay = false
-      end
-    end
-    @periods = ps_options_for_period
-    @intervals = ps_options_for_interval
-    return okay
-  end
-
-  def set_up_months(params,update)
-    tod = Date.today
-    @fin_list = (0..11).each.map do |i|
-      m = tod << i
-      tag = "#{Date::ABBR_MONTHNAMES[m.month]}-#{m.strftime("%Y")}"
-    end
-  end
-
-  def make_intervals
-    current = @from
-    @ends = []
-    @labels = []
-    okay = true
-    real_to = [@to,Date.today].min
-    case @params['interval_type']
-    when 'by_month'
-      while current < real_to
-        @labels << Date::ABBR_MONTHNAMES[current.month]
-        current = current >> 1
-        @ends << current
-      end
-      @interval_label = 'month'
-    when 'by_week'
-      current = current.beginning_of_week
-      @from = current
-      while current < (real_to - 7)
-        lweek = current + 6
-        @labels << "W#{lweek.cweek}, #{Date::ABBR_MONTHNAMES[lweek.month]} #{lweek.day}"
-        current = current + 7
-        @ends << current
-      end
-      @interval_label = 'week'
-    when 'by_quarter'
-      while current < real_to
-        q = ((current.month - 1) / 3)
-        q = 4 if q == 0
-        @labels << "Q#{q}"
-        current = current >> 3
-        @ends << current
-      end
-      @interval_label = 'quarter'
-    else
-      okay = false
-      $pslog.error{"Unknown interval range '#{@params['interval_type']}'"}
-      flash[:error] = l(:report_bad_interval_type,:inttype => params['interval_type'])
-    end
-    return okay
-  end
 
   def time_logged_by_group()
     @times = {}
@@ -661,18 +495,9 @@ class ProjectState::ProjectStateReportsController < ApplicationController
   end
 
   def update
-#    $pslog.warn("In the update controller...")
     flash.clear
     @report = ProjectStateReport.find(params[:id].to_i)
     @params = params
-#    @params.keys.each do |x|
-#      $pslog.warn("param: #{x} == #{@params[x]}")
-#    end
-#    if params.has_key? "format"
-#      $pslog.info("Before!")
-#      send_data("zork",filename: "thing.txt")
-#      $pslog.info("After!")
-#    end
     if @report.dateview == 'form_dates'
       @okay = set_up_time(params,true)
     else
