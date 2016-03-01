@@ -243,5 +243,9 @@ module ProjectStatePlugin
       $pslog.level = ::Logger::DEBUG
     end
 
+    def init_random
+      $psrand = Random.new
+    end
+
   end
 end

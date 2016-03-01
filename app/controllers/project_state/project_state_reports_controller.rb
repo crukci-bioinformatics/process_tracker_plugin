@@ -307,56 +307,8 @@ class ProjectState::ProjectStateReportsController < ApplicationController
     return changes
   end
 
-  def find_previous_change(issue,finish,psid)
-    jlist = issue.journals.where("created_on < ?",finish).order(created_on: :desc).includes(:details)
-    jlist.each do |j|
-      j.details.each do |jd|
-        if jd.property == 'cf' && jd.prop_key == psid
-          return j.created_on
-        end
-      end
-    end
-    return issue.created_on
-  end
-
   def time_waiting()
-    @projects = {}
-    projlist = collectProjects(Setting.plugin_project_state['billable'])
-    Project.where(id: projlist).each do |proj|
-      @projects[proj.id] = proj
-    end
-    state_prop_key = CustomField.find_by(name: 'Project State').id.to_s
-    interesting = ["Ready","Hold"]
-    start = @from
-    rlist = []
-    hlist = []
-    @ready = []
-    @hold = []
-    @ends.each do |fin|
-      Journal.where(created_on: start..(fin-1)).includes(:details).each do |j|
-        iss = j.issue
-        next unless @projects.include? iss.project_id
-        j.details.each do |jd|
-          if jd.property == 'cf' && jd.prop_key == state_prop_key && interesting.include?(jd.old_value)
-            # it's a candidate
-            prev = find_previous_change(j.issue,j.created_on,state_prop_key)
-            interval = ((j.created_on - prev).to_i / 86400.0).round(2)
-#            $pslog.debug("Iss: #{iss.id} [#{jd.old_value}] -- From: #{prev}  To: #{j.created_on}  Interval: #{interval}")
-#            $pslog.debug("From: #{prev.class}  To: #{j.created_on.class}  Interval: #{interval.class}")
-            if jd.old_value == 'Ready'
-              rlist << interval
-            else
-              hlist << interval
-            end
-          end
-        end
-      end
-      @ready << boxplot_values(rlist)
-      @hold << boxplot_values(hlist)
-      rlist = []
-      hlist = []
-      start = fin
-    end
+    @okay = time_waiting_data()
     @make_plot = true
   end
 

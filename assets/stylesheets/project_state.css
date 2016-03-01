@@ -26,6 +26,13 @@ table#ps_counts td.counts { text-align: right; padding: 3px; border-left: 1px so
 table#ps_counts td.rowsum { text-align: right; border-left: 1px solid black; padding: 3px; }
 table#ps_counts th { text-align: right; font-weight: bold; }
 
+table#ps_waiting tbody tr:nth-child(even) { background: #B2F0D1; }
+table#ps_waiting tbody tr:nth-child(odd) { background: #E6FAF0; }
+table#ps_waiting td.counts { text-align: right; padding: 3px; border-left: 1px solid white; }
+table#ps_waiting th { text-align: center; font-weight: bold; }
+table#ps_waiting tr#wait_date_line { font-weight: bold; font-size: 120%; background: #FFF; padding-top: 10px; padding-bottom: 2px; text-align: center; }
+table#ps_waiting tr#wait_state_line { font-weight: bold; font-size: 75%; background: #FFF;  text-align: center; }
+
 table#ps_limit_changes tbody tr:nth-child(even) { background: #B2F0D1; }
 table#ps_limit_changes tbody tr:nth-child(odd) { background: #E6FAF0; }
 

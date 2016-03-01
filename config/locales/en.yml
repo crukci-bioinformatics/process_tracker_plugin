@@ -98,8 +98,12 @@ en:
   report_oc_reopening: "Re-opening"
   report_waiting_y: "Time in State"
   report_waiting_ready: "Ready"
-  report_waiting_hold: "Hold"
+  report_waiting_hold: "On Hold"
+  report_waiting_pend: "Pending"
   report_waiting_yaxis: "Days in State"
+  report_waiting_days_in_state: "Days"
+  report_waiting_entered_on: "Entered"
+  report_waiting_left_on: "Left"
 
   label_last_12: "last 12 months"
   label_last_6: "last 6 months"

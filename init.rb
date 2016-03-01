@@ -7,7 +7,7 @@ Redmine::Plugin.register :project_state do
   name 'Project State plugin'
   author 'Gord Brown'
   description 'Track project states, notify if/when various conditions occur'
-  version '1.1.9'
+  version '1.1.10'
   url 'https://github.com/crukci-bioinformatics/process_tracker_plugin'
   author_url 'http://gdbrown.org/blog/'
 
@@ -39,8 +39,9 @@ Rails.configuration.after_initialize do
   # and if so, add default CustomField values to issues
   initr = ProjectStatePlugin::Initializer.new
   initr.init_logger
+  initr.init_random
   initr.ensure_custom_fields # ensure custom fields are present (should only need to be created once)
   projSet = initr.ensure_projects_have_custom_fields
   initr.populate_reports
-#  initr.ensure_issues_have_custom_fields(projSet)
+  initr.ensure_issues_have_custom_fields(projSet)
 end

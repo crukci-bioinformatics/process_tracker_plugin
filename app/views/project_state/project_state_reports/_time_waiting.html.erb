@@ -1,7 +1,7 @@
 <script>
 var chart = new Highcharts.Chart({
         chart: {
-            type: 'boxplot',
+            type: 'scatter',
             renderTo: 'chart_container'
         },
         title: {
@@ -23,11 +23,15 @@ var chart = new Highcharts.Chart({
         },
         series: [
             { name: '<%= l(:report_waiting_ready) %>',
-              data: <%= @ready %>,
+              data: <%= @data_ready %>,
+              visible: true
+            },
+            { name: '<%= l(:report_waiting_pend) %>',
+              data: <%= @data_pend %>,
               visible: true
             },
             { name: '<%= l(:report_waiting_hold) %>',
-              data: <%= @hold %>,
+              data: <%= @data_hold %>,
               visible: true
             }
         ],
@@ -41,21 +45,59 @@ var chart = new Highcharts.Chart({
 
 <h3>Tabular View</h3>
 
-<table id="ps_counts">
+<table id="ps_waiting">
   <thead>
     <tr>
-      <th></th>
-      <th><%= l(:report_waiting_ready) %></th>
-      <th><%= l(:report_waiting_hold) %></th>
+      <th><%= l(:text_issue) %></th>
+      <th><%= l(:report_waiting_days_in_state) %></th>
+      <th><%= l(:report_waiting_entered_on) %></th>
+      <th><%= l(:report_waiting_left_on) %></th>
+      <th><%= l(:text_project) %></th>
+      <th><%= l(:text_subject) %></th>
     </tr>
   </thead>
   <tbody>
     <% (0..(@labels.length-1)).each do |i| %>
-      <tr>
-        <td><%= @labels[i] %></td>
-        <td><%= @ready[i] %></td>
-        <td><%= @hold[i] %></td>
-      </tr>
+      <tr id="wait_date_line"><th colspan=6><%= @labels[i] %></th></tr>
+      <% if @ready_lists[i].length > 0 %>
+        <tr id="wait_state_line"><th colspan=6>Ready</th></tr>
+        <% @ready_lists[i].each do |ent| %>
+          <tr>
+            <td><a href="<%= issue_url(ent.issue.id) %>"><%= ent.issue.id %></a></td>
+            <td class="counts"><%= ent.days %></td>
+            <td><%= ent.entered_on %></td>
+            <td><%= ent.left_on %></td>
+            <td><a href="<%= project_url(ent.issue.project_id) %>"><%= ent.issue.project.name %></a></td>
+            <td><%= ent.issue.subject.truncate(70) %></td>
+          </tr>
+        <% end %>
+      <% end %>
+      <% if @pend_lists[i].length > 0 %>
+        <tr id="wait_state_line"><th colspan=6>Pending</th></tr>
+        <% @pend_lists[i].each do |ent| %>
+          <tr>
+            <td><a href="<%= issue_url(ent.issue.id) %>"><%= ent.issue.id %></a></td>
+            <td class="counts"><%= ent.days %></td>
+            <td><%= ent.entered_on %></td>
+            <td><%= ent.left_on %></td>
+            <td><a href="<%= project_url(ent.issue.project_id) %>"><%= ent.issue.project.name %></a></td>
+            <td><%= ent.issue.subject.truncate(70) %></td>
+          </tr>
+        <% end %>
+      <% end %>
+      <% if @hold_lists[i].length > 0 %>
+        <tr id="wait_state_line"><th colspan=6>On Hold</th></tr>
+        <% @hold_lists[i].each do |ent| %>
+          <tr>
+            <td><a href="<%= issue_url(ent.issue.id) %>"><%= ent.issue.id %></a></td>
+            <td class="counts"><%= ent.days %></td>
+            <td><%= ent.entered_on %></td>
+            <td><%= ent.left_on %></td>
+            <td><a href="<%= project_url(ent.issue.project_id) %>"><%= ent.issue.project.name %></a></td>
+            <td><%= ent.issue.subject.truncate(70) %></td>
+          </tr>
+        <% end %>
+      <% end %>
     <% end %>
   </tbody>
 </table>

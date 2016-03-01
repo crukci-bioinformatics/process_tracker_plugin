@@ -3,6 +3,7 @@ require 'project_state/utils'
 module ProjectStatePlugin
   module Reports
     include ProjectStatePlugin::Utilities
+    include ProjectStatePlugin::Defaults
 
     # Labels for periods (date ranges), with identifying strings
     def ps_options_for_period
@@ -198,48 +199,105 @@ module ProjectStatePlugin
       return okay
     end
 
-    # Generate
+    # given a datetime, find the journal indicating entry into this state/status and report
+    # the time of the change.
+    def find_previous_change_state(issue,finish,psid)
+      jlist = issue.journals.where("created_on < ?",finish).order(created_on: :desc).includes(:details)
+      jlist.each do |j|
+        j.details.each do |jd|
+          if jd.property == 'cf' && jd.prop_key == psid
+            return j.created_on
+          end
+        end
+      end
+      return issue.created_on
+    end
+
+    def find_previous_change_status(issue,finish,new_status)
+      jlist = issue.journals.where("created_on < ?",finish).order(created_on: :desc).includes(:details)
+      jlist.each do |j|
+        j.details.each do |jd|
+          if jd.property == 'attr' && jd.prop_key == 'status_id'
+            return j.created_on
+          end
+        end
+      end
+      return issue.created_on
+    end
+
+    def to_days(x)
+      return (x.to_i / 86400.0).round(2)
+    end
+
+    def jitter(x)
+      $psrand.rand(x*2) - x
+    end
+
+    class TimeWaitingRecord < Struct.new(:interval,:days,:issue,:entered_on,:left_on)
+    end
+
+    # Generate data for "time waiting" report (time in ready, time in hold)
+    # Data needed are:
+    #   - for each project that exited these states in each period
+    #     - how long they were in them
+    #     - all split out by state/status and interval
+    #   - for each interval
+    #     - the time-in-state values (for plotting)
+    #     - a histogram of the points
     def time_waiting_data()
       @projects = {}
       projlist = collectProjects(Setting.plugin_project_state['billable'])
       Project.where(id: projlist).each do |proj|
         @projects[proj.id] = proj
       end
-      state_prop_key = CustomField.find_by(name: 'Project State').id.to_s
-      interesting = ["Ready","Hold"]
+      state_prop_key = CustomField.find_by(name: CUSTOM_PROJECT_STATE).id.to_s
+      status_pend_id = IssueStatus.find_by(name: "Pending").id.to_s
+      status_hold_id = IssueStatus.find_by(name: "On Hold").id.to_s
       start = @from
-      rlist = []
-      hlist = []
-      @ready = []
-      @hold = []
-      @ends.each do |fin|
+      ready_l = []
+      pend_l = []
+      hold_l = []
+      @ready_lists = []
+      @pend_lists = []
+      @hold_lists = []
+      @data_ready = []
+      @data_pend = []
+      @data_hold = []
+      @ends.each_with_index do |fin,ind|
         Journal.where(created_on: start..(fin-1)).includes(:details).each do |j|
           iss = j.issue
           next unless @projects.include? iss.project_id
           j.details.each do |jd|
-            if jd.property == 'cf' && jd.prop_key == state_prop_key && interesting.include?(jd.old_value)
-              # it's a candidate
-              prev = find_previous_change(j.issue,j.created_on,state_prop_key)
-              interval = ((j.created_on - prev).to_i / 86400.0).round(2)
-  #            $pslog.debug("Iss: #{iss.id} [#{jd.old_value}] -- From: #{prev}  To: #{j.created_on}  Interval: #{interval}")
-  #            $pslog.debug("From: #{prev.class}  To: #{j.created_on.class}  Interval: #{interval.class}")
-              if jd.old_value == 'Ready'
-                rlist << interval
-              else
-                hlist << interval
+            $pslog.debug("detail: prop=#{jd.property} pk=#{jd.prop_key} ov=#{jd.old_value}")
+            if jd.property == 'cf' && jd.prop_key == state_prop_key && jd.old_value == "Ready"
+              prev = find_previous_change_state(iss,j.created_on,state_prop_key)
+              interval = to_days(j.created_on - prev)
+              ready_l << TimeWaitingRecord.new(ind,interval,iss,prev.to_date,j.created_on.to_date)
+            elsif jd.property == 'attr' && jd.prop_key == 'status_id'
+              if jd.old_value == status_pend_id
+			    prev = find_previous_change_status(iss,j.created_on,status_pend_id)
+                interval = to_days(j.created_on - prev)
+                pend_l << TimeWaitingRecord.new(ind,interval,iss,prev.to_date,j.created_on.to_date)
+              elsif jd.old_value == status_hold_id
+			    prev = find_previous_change_status(iss,j.created_on,status_hold_id)
+                interval = to_days(j.created_on - prev)
+                hold_l << TimeWaitingRecord.new(ind,interval,iss,prev.to_date,j.created_on.to_date)
               end
             end
           end
         end
-        @ready << boxplot_values(rlist)
-        @hold << boxplot_values(hlist)
-        rlist = []
-        hlist = []
+        @ready_lists << ready_l.sort!{|a,b| b.days <=> a.days}
+        @pend_lists << pend_l.sort!{|a,b| b.days <=> a.days}
+        @hold_lists << hold_l.sort!{|a,b| b.days <=> a.days}
+        ready_l.each { |ready| @data_ready << [ready.interval-0.2+jitter(0.1),ready.days] }
+        pend_l.each { |pend| @data_pend << [pend.interval+jitter(0.1),pend.days] }
+        hold_l.each { |hold| @data_hold << [hold.interval+0.2+jitter(0.1),hold.days] }
+        ready_l = []
+        pend_l = []
+        hold_l = []
         start = fin
       end
-      @make_plot = true
+      return true
     end
-  
-  
   end
 end
