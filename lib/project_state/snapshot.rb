@@ -70,24 +70,132 @@ module ProjectStatePlugin
     end
   end
 
-  class JournalAuditor
+  class HistEntry < Struct.new(:journal,:when,:details)
+  end
+  class HistDetail < Struct.new(:from,:to)
+  end
 
-    def audit(iss_id)
-      psid = "#{CustomField.find_by(name: "Project State").id}"
-      iss = Issue.find(iss_id)
-      iss.journals.order(:created_on).includes(:details).each do |j|
-        u = User.find(j.user_id)
+  class History
+    include ProjectStatePlugin::Utilities
+    @@statusMap = {}
+    
+    def initialize(issue)
+      if @@statusMap.length == 0
+        IssueStatus.all.each{|is| @@statusMap[is.id] = is.name}
+      end
+      psid = CustomField.find_by(name: "Project State").id.to_s
+      stid = "status_id"
+      @issue = issue
+      @trail = []
+      issue.journals.each do |j|
+        t = HistEntry.new(j.id,j.created_on,{})
         j.details.each do |jd|
-          if jd.property == "cf" && jd.prop_key == psid
-            STDOUT.printf("#{j.created_on} [#{j.id}]: state change: #{jd.old_value} --> #{jd.value} [#{u.firstname}]\n")
-          elsif jd.property == "attr" && jd.prop_key == "status_id"
-            os = IssueStatus.find(jd.old_value.to_i)
-            ns = IssueStatus.find(jd.value.to_i)
-            STDOUT.printf("#{j.created_on} [#{j.id}]: status change: #{os.name} --> #{ns.name} [#{u.firstname}]\n")
+          if jd.property == 'cf' && jd.prop_key == psid
+            t.details['state'] = HistDetail.new(jd.old_value,jd.value)
+          elsif  jd.property == 'attr' && jd.prop_key == stid
+            t.details['status'] = HistDetail.new(@@statusMap[jd.old_value.to_i],@@statusMap[jd.value.to_i])
           end
+        end
+        if t.details.length > 0
+          @trail << t
+        end
+      end
+      @trail.sort!{|a,b| a.when <=> b.when}
+    end
+
+    def dump(dest: STDOUT)
+      @trail.each do |j|
+        dstr = "#{j.when} [#{j.journal}]: "
+        blank = ' ' * dstr.length
+#        dest.printf "#{j.when}:\n"
+        first = true
+        j.details.each do |k,v|
+          dest.printf("#{dstr}#{k} : #{v.from} => #{v.to}\n") if first
+          dest.printf("#{blank}#{k} : #{v.from} => #{v.to}\n") if !first
+          first = false
         end
       end
     end
 
+    def first()
+      ind = 0
+      while !@trail[ind].details.include?('state')
+        ind += 1
+      end
+      return @trail[ind]
+    end
+
+    def consistent?(dest: STDOUT)
+      state = "new"
+      status = nil
+      cons = true
+      @trail.each do |j|
+        j.details.each do |k,v|
+          if k == 'state'
+            if v.from != state
+              cons = false
+              dest.printf("Iss #{@issue.id} journal #{j.journal} state: expected=#{state} from=#{v.from}\n")
+            end
+            state = v.to
+          elsif k == 'status'
+            if !status.nil? && v.from != status
+              cons = false
+              dest.printf("Iss #{@issue.id} journal #{j.journal} status: expected=#{status} from=#{v.from}\n")
+            end
+            status = v.to
+          end
+        end
+      end
+      return cons
+    end
+  end
+
+  class JournalAuditor
+
+    def issue_consistent?(iss: nil, iss_id: nil, dest: STDOUT)
+      iss = Issue.find(iss_id) if iss.nil?
+      h = History.new(iss)
+      cons = h.consistent?(dest: dest)
+      h.dump(dest: dest) if !cons
+      return cons
+    end
+
+    def audit_issues(dest: STDOUT)
+      closed = IssueStatus.where(is_closed: true)
+      proj_state = CustomField.find_by(name: 'Project State').id
+      Issue.where.not(status: closed).each do |iss|
+        next if iss.custom_value_for(proj_state).nil?
+        dest.printf("Issue #{iss.id}: #{iss.subject.truncate(50)}\n")
+        cons = issue_consistent?(iss: iss,dest: dest)
+        add_new(iss_id: iss.id) if !cons
+      end
+    end
+
+    def add_new(iss_id: nil, dest: STDOUT)
+      $pslog.debug("add_new: #{iss_id}")
+      return if iss_id.nil?
+      iss = Issue.find(iss_id)
+      return if iss.nil?
+      $pslog.debug("add_new (x): #{iss_id}")
+      h = History.new(iss)
+      hentry = h.first
+      thing = hentry.details['state']
+      $pslog.debug("First entry: #{thing.from} => #{thing.to}")
+      if thing.from != "new"
+        psid = CustomField.find_by(name: ProjectStatePlugin::Defaults::CUSTOM_PROJECT_STATE).id.to_s
+        journal = Journal.create(journalized_id: iss_id,
+                                 journalized_type: 'Issue',
+                                 user: User.current,
+                                 created_on: iss.created_on,
+                                 private_notes: 0) do |je|
+          je.details << JournalDetail.new(property: 'cf',
+                                          prop_key: psid,
+                                          old_value: 'new',
+                                          value: thing.from)
+        end
+        $pslog.debug("Created journal entry...")
+      end
+    end
+      
   end
 end

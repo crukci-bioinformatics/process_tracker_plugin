@@ -268,7 +268,6 @@ module ProjectStatePlugin
           iss = j.issue
           next unless @projects.include? iss.project_id
           j.details.each do |jd|
-            $pslog.debug("detail: prop=#{jd.property} pk=#{jd.prop_key} ov=#{jd.old_value}")
             if jd.property == 'cf' && jd.prop_key == state_prop_key && jd.old_value == "Ready"
               prev = find_previous_change_state(iss,j.created_on,state_prop_key)
               interval = to_days(j.created_on - prev)
