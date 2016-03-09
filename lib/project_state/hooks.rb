@@ -66,7 +66,7 @@ module ProjectStatePlugin
       issue.custom_field_values.each do |cfv|
         if cfv.value_was != cfv.value
           manual[cfv.custom_field_id.to_s] = {old: cfv.value_was, new: cfv.value}
-          $pslog.debug("cfv: #{cfv.custom_field_id}  was: #{cfv.value_was}  is: #{cfv.value}")
+          $pslog.debug("cfv: #{cfv.custom_field_id}  was: #{cfv.value_was.nil? ? 'nil' : cfv.value_was}  is: #{cfv.value.nil? ? 'nil' : cfv.value}")
         end
       end
       return manual
@@ -151,7 +151,7 @@ module ProjectStatePlugin
       stid = CustomField.find_by(name: CUSTOM_STATE_TIMEOUT).id.to_s
       manual = whats_manually_set(iss)
       manual.each do |k,v|
-        $pslog.debug("k: #{k}  was: #{v[:old]}  is: #{v[:new]}")
+        $pslog.debug("k: #{k}  was: #{v[:old].nil? ? 'nil' : v[:old]}  is: #{v[:new].nil? ? 'nil' : v[:new]}")
       end
 
       @project_state_notify = {}
@@ -159,12 +159,20 @@ module ProjectStatePlugin
 
       # Cases
 
-      # state changed but not status: don't do that!
-      # this case is handled elsewhere, in the validation method patched into "Issue"
+      st_changed = false
+      # state changed but not status: don't do that (unless moving an issue
+      # to a new project, where it now needs a state)!
+      # Otherwise, this case is handled elsewhere, in the validation
+      # method patched into "Issue"
+      if iss.project_id_changed? && manual.include?(psid) && manual[psid][:old].nil?
+        # was not formerly set, so set up with defaults
+        $pslog.debug("Setting state, etc to defaults...")
+        st_changed = true
+        st_val = StatusStateMapping.find_by(status: iss.status_id).state
+        ps_custom[psid] = st_val
 
       # state change and status change: see if they match
-      st_changed = false
-      if manual.include?(psid) && manual.include?("status")
+      elsif manual.include?(psid) && manual.include?("status")
         nstatus = manual["status"][:new]
         nstate = manual[psid][:new]
         target = StatusStateMapping.find_by(status: nstatus).state
@@ -186,7 +194,7 @@ module ProjectStatePlugin
         end
       end
 
-      if manual.include?(stid)
+      if manual.include?(stid) && !manual[stid][:new].blank?
         @project_state_notify[:state_timeout] = manual[stid]
       else
         if st_changed
@@ -194,10 +202,11 @@ module ProjectStatePlugin
         end
       end
 
-      if manual.include?(hlid)
+#      $pslog.debug("hlid: is: #{manual[hlid][:new].nil? ? 'nil' : manual[hlid][:new]} was: #{manual[hlid][:old].nil? ? 'nil' : manual[hlid][:old]}")
+      if manual.include?(hlid) && !manual[hlid][:new].blank?
         @project_state_notify[:hour_limit] = manual[hlid]
       else
-        if manual.include?("tracker")
+        if manual.include?("tracker") || (manual.include?(hlid) && manual[hlid][:new].blank?)
           ps_custom[hlid] = TimeLimitDefault.find_by(tracker_id: iss.tracker_id).hours.to_s
         end
       end

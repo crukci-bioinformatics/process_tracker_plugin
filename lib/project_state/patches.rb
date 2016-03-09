@@ -15,8 +15,9 @@ module ProjectStatePlugin
           return if cf.nil?
           return if cf.is_a?(Array) && cf.length == 0
           cf = cf[0] if cf.is_a?(Array)
+          $pslog.debug("cf on project change: value=#{cf.value.nil? ? 'nil' : cf.value} was=#{cf.value_was.nil? ? 'nil' : cf.value_was}")
           cf_changed = cf.value_was != cf.value
-          if cf_changed && !status_id_changed? 
+          if cf_changed && !status_id_changed? && !cf.value_was.nil?
             errors.add("Project State"," must not be changed directly.")
           end
         end
