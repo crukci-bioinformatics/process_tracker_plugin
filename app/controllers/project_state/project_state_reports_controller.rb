@@ -313,32 +313,7 @@ class ProjectState::ProjectStateReportsController < ApplicationController
   end
 
   def opening_closing()
-    start = @from
-    @opening = []
-    @closing = []
-    @reopening = []
-    state_prop_key = CustomField.find_by(name: 'Project State').id.to_s
-    @ends.each do |fin|
-      s = Set.new
-      f = Set.new
-      r = Set.new
-      Journal.where(created_on: start..(fin-1)).each do |j|
-        j.details.each do |jd|
-          if jd.property == 'cf' && jd.prop_key == state_prop_key
-#            s += 1 if jd.old_value == 'new'
-#            f += 1 if jd.value == 'Post'
-#            r += 1 if jd.old_value == 'Post'
-            s.add(j.journalized_id) if jd.old_value == 'new'
-            f.add(j.journalized_id) if jd.value == 'Post'
-            r.add(j.journalized_id) if jd.old_value == 'Post'
-          end
-        end
-      end
-      @opening << s.size
-      @closing << f.size
-      @reopening << r.size
-      start = fin
-    end
+    @okay = opening_closing_data()
     @make_plot = true
   end
 

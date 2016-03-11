@@ -94,6 +94,7 @@ en:
   report_fin_label: "Month"
   report_fin_fileupload: "Finance Spreadsheet"
   report_oc_opening: "Opening"
+  report_oc_newopening: "Opening (new)"
   report_oc_closing: "Closing"
   report_oc_reopening: "Re-opening"
   report_waiting_y: "Time in State"

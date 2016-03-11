@@ -199,8 +199,8 @@ module ProjectStatePlugin
       return okay
     end
 
-    # given a datetime, find the journal indicating entry into this state/status and report
-    # the time of the change.
+    # given a datetime, find the journal indicating entry into this
+    # state/status and report the time of the change.
     def find_previous_change_state(issue,finish,psid)
       jlist = issue.journals.where("created_on < ?",finish).order(created_on: :desc).includes(:details)
       jlist.each do |j|
@@ -297,6 +297,48 @@ module ProjectStatePlugin
         start = fin
       end
       return true
+    end
+
+    def opening_closing_data()
+      okay = true
+      start = @from
+      @opening = []
+      @closing = []
+      @reopening = []
+      @newopening = []
+      @setopening = []
+      @setclosing = []
+      @setreopening = []
+      @setnewopening = []
+      state_prop_key = CustomField.find_by(name: 'Project State').id.to_s
+      @ends.each do |fin|
+        s = Set.new
+        f = Set.new
+        r = Set.new
+        Journal.where(created_on: start..(fin-1)).each do |j|
+          j.details.each do |jd|
+            if jd.property == 'cf' && jd.prop_key == state_prop_key
+              s.add(j.journalized_id) if jd.old_value == 'new'
+              f.add(j.journalized_id) if jd.value == 'Post'
+              r.add(j.journalized_id) if jd.old_value == 'Post'
+            end
+          end
+        end
+        @newopening << s.size
+        @closing << f.size
+        @reopening << r.size
+        @opening << (s.size + r.size)
+        s_list = Issue.where(id: s.to_a).to_a.sort!{|a,b| a.updated_on <=> b.updated_on}
+        f_list = Issue.where(id: f.to_a).to_a.sort!{|a,b| a.updated_on <=> b.updated_on}
+        r_list = Issue.where(id: r.to_a).to_a.sort!{|a,b| a.updated_on <=> b.updated_on}
+        sr_list = Issue.where(id: (r+s).to_a).to_a.sort!{|a,b| a.updated_on <=> b.updated_on}
+        @setnewopening << s_list
+        @setclosing << f_list
+        @setreopening << r_list
+        @setopening << sr_list
+        start = fin
+      end
+      return okay
     end
   end
 end

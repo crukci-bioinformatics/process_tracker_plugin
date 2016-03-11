@@ -28,9 +28,13 @@ var chart = new Highcharts.Chart({
               data: <%= @closing %>,
               visible: true
             },
+            { name: '<%= l(:report_oc_newopening) %>',
+              data: <%= @newopening %>,
+              visible: false
+            },
             { name: '<%= l(:report_oc_reopening) %>',
               data: <%= @reopening %>,
-              visible: true
+              visible: false
             }
         ],
         exporting: {
@@ -49,6 +53,7 @@ var chart = new Highcharts.Chart({
       <th></th>
       <th>Opening</th>
       <th>Closing</th>
+      <th>Opening (new)</th>
       <th>Re-opening</th>
     </tr>
   </thead>
@@ -58,8 +63,76 @@ var chart = new Highcharts.Chart({
         <td><%= @labels[i] %></td>
         <td><%= @opening[i] %></td>
         <td><%= @closing[i] %></td>
+        <td><%= @newopening[i] %></td>
         <td><%= @reopening[i] %></td>
       </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<h3 class="space_above">Project Details</h3>
+<table id="ps_counts">
+  <thead>
+    <tr>
+      <th>Interval</th>
+      <th>Transition</th>
+      <th>Issue</th>
+      <th>Project</th>
+      <th>Subject</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% ifirst = true %>
+    <% (0..(@labels.length-1)).each do |i| %>
+      <% s_list = @setnewopening[i] %>
+      <% sfirst = true %>
+      <% $pslog.debug("s_issues_template: #{s_list.map{|x| x.id}}") %>
+      <% (0..(s_list.length-1)).each do |j| %>
+        <% iss = s_list[j] %>
+        <% $pslog.debug("iss: #{iss}") %>
+        <tr>
+          <td><%= ifirst ? @labels[i] : "" %></td>
+          <td><%= sfirst ? "Opening (new)" : "" %></td>
+          <td><a href="<%= issue_url(iss.id) %>"><%= iss.id %></td>
+          <td><a href="<%= project_url(iss.project.id) %>"><%= iss.project.name %></td>
+          <td><%= iss.subject.truncate(50) %></td>
+        </tr>
+        <% sfirst = false %>
+        <% ifirst = false %>
+      <% end %>
+      <% s_list = @setreopening[i] %>
+      <% sfirst = true %>
+      <% $pslog.debug("s_issues_template: #{s_list.map{|x| x.id}}") %>
+      <% (0..(s_list.length-1)).each do |j| %>
+        <% iss = s_list[j] %>
+        <% $pslog.debug("iss: #{iss}") %>
+        <tr>
+          <td><%= ifirst ? @labels[i] : "" %></td>
+          <td><%= sfirst ? "Reopening" : "" %></td>
+          <td><a href="<%= issue_url(iss.id) %>"><%= iss.id %></td>
+          <td><a href="<%= project_url(iss.project.id) %>"><%= iss.project.name %></td>
+          <td><%= iss.subject.truncate(50) %></td>
+        </tr>
+        <% sfirst = false %>
+        <% ifirst = false %>
+      <% end %>
+      <% s_list = @setclosing[i] %>
+      <% sfirst = true %>
+      <% $pslog.debug("s_issues_template: #{s_list.map{|x| x.id}}") %>
+      <% (0..(s_list.length-1)).each do |j| %>
+        <% iss = s_list[j] %>
+        <% $pslog.debug("iss: #{iss}") %>
+        <tr>
+          <td><%= ifirst ? @labels[i] : "" %></td>
+          <td><%= sfirst ? "Closing" : "" %></td>
+          <td><a href="<%= issue_url(iss.id) %>"><%= iss.id %></td>
+          <td><a href="<%= project_url(iss.project.id) %>"><%= iss.project.name %></td>
+          <td><%= iss.subject.truncate(50) %></td>
+        </tr>
+        <% sfirst = false %>
+        <% ifirst = false %>
+      <% end %>
+      <% ifirst = true %>
     <% end %>
   </tbody>
 </table>
