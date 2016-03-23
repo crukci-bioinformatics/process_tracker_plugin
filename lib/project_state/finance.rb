@@ -31,8 +31,6 @@ class FinanceSheet
   private
 
   def get_sheet(year,month)
-    $pslog.debug("Year: #{year}")
-    $pslog.debug("Month: #{month}")
     tag = "#{month.capitalize}-#{year}"
     results = @doc.sheets.select{|s| s.name == tag}
     if results.length != 1

@@ -11,9 +11,6 @@ namespace :redmine do
     desc "Update research group cost centres from spreadsheet"
     task :update_costcodes, [:filename,:year,:month] => [:environment] do |t,args|
       include ProjectStatePlugin::Utilities
-#      $pslog.debug("Filename: '#{args[:filename]}'")
-#      $pslog.debug("Year: '#{args[:year]}'")
-#      $pslog.debug("Month: '#{args[:month]}'")
 
       # load spreadsheet, get results for year, month
       sheet = FinanceSheet.new(args[:filename])
@@ -28,7 +25,6 @@ namespace :redmine do
       cfid = CustomField.find_by(type: 'ProjectCustomField', name: 'Cost Centre').id
       pset = collectProjects("Research Groups")
       Project.where(id: pset).each do |proj|
-#        $pslog.debug("Checking '#{proj.name}'...")
         code = get_project_costcode(proj,@grants,@codes)
         if !code.nil?
           cfs = proj.custom_values.select{|x| x.customized_type=="Project" && x.custom_field_id == cfid}
@@ -45,8 +41,6 @@ namespace :redmine do
           else
             $pslog.error("Project '#{proj.name}': #{cfs.length} custom values for 'Cost Centre'... please investigate.")
           end
-        else
-#          $pslog.debug("Skipping '#{proj.name}'...")
         end
       end
     end

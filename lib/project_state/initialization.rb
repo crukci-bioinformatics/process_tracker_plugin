@@ -148,7 +148,7 @@ module ProjectStatePlugin
           CustomValue.find_or_create_by(customized_id: iss.id,
                                         customized_type: 'Issue',
                                         custom_field: stime) do |cv|
-            cv.value = StateTimeoutDefault.find_by(state: ps.value).timeout.to_s
+            cv.value = StatusTimeoutDefault.find_by(status: iss.status_id).timeout.to_s
           end
           CustomValue.find_or_create_by(customized_id: iss.id,
                                         customized_type: 'Issue',

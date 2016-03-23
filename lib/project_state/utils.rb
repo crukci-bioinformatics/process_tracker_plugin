@@ -160,7 +160,6 @@ module ProjectStatePlugin
 
     def boxplot_values(data)
       ds = data.sort
-      $pslog.debug("data [#{ds.length}]: #{ds}")
       if data.length == 0
         return [0,0,0,0,0]
       elsif data.length == 1
@@ -179,7 +178,6 @@ module ProjectStatePlugin
       quart = ds.length / 4
       first = ds[quart]
       third  = ds[quart*3]
-      $pslog.debug("results: #{min} #{first} #{med} #{third} #{max}")
       return [min,first,med,third,max]
     end
 

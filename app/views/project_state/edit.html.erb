@@ -3,7 +3,7 @@
 <% end %>
 
 <h3><%= l(:conf_title) %></h3>
-<%= form_tag("/project_state/configure",method: "patch") do %>
+<%= form_tag("/project_state/configure",method: "post") do %>
 <div class="ps_content_left">
 
 <div class="ps_table_border">
@@ -27,12 +27,12 @@
 <h4 class="ps_header"><%= l(:conf_state_timeout) %></h4>
 <table class="ps_configure">
   <tbody>
-  <% @state_order.each do |s| %>
-    <tr><td class="ps_label"><%= label_tag(s,@states[s]) %>: </td>
+  <% @sorder.each do |s| %>
+    <tr><td class="ps_label"><%= @statusTimeout_labels[s] %>: </td>
         <% if @is_admin %>
-          <td><%= text_field_tag(s,value=@state2days[s]) %></td>
+          <td><%= text_field_tag(@statusTimeout_tags[s],value=@status2days[s]) %></td>
         <% else %>
-          <td><%= label_tag(s,@state2days[s]) %></td>
+          <td><%= label_tag(@statusTimeout_tags[s],@status2days[s]) %></td>
         <% end %>
     </tr>
   <% end %>

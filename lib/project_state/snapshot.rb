@@ -172,15 +172,12 @@ module ProjectStatePlugin
     end
 
     def add_new(iss_id: nil, dest: STDOUT)
-      $pslog.debug("add_new: #{iss_id}")
       return if iss_id.nil?
       iss = Issue.find(iss_id)
       return if iss.nil?
-      $pslog.debug("add_new (x): #{iss_id}")
       h = History.new(iss)
       hentry = h.first
       thing = hentry.details['state']
-      $pslog.debug("First entry: #{thing.from} => #{thing.to}")
       if thing.from != "new"
         psid = CustomField.find_by(name: ProjectStatePlugin::Defaults::CUSTOM_PROJECT_STATE).id.to_s
         journal = Journal.create(journalized_id: iss_id,
@@ -193,7 +190,6 @@ module ProjectStatePlugin
                                           old_value: 'new',
                                           value: thing.from)
         end
-        $pslog.debug("Created journal entry...")
       end
     end
       

@@ -12,7 +12,7 @@ class ProjectStateController < ApplicationController
 
   unloadable
 
-  def update(params)
+  def was_updated(params)
     update = false
     params.keys.each do |k|
       flds = k.split('_',2)
@@ -35,9 +35,9 @@ class ProjectStateController < ApplicationController
         when 'state'
           sid = flds[1]
           days = params[k].to_i
-          sval = StateTimeoutDefault.find_by(state: sid)
+          sval = StatusTimeoutDefault.find_by(status: sid)
           if sval.nil?
-            StateTimeoutDefault.create(state: sid, timeout: days)
+            StatusTimeoutDefault.create(status: sid, timeout: days)
             update = true
           else
             if sval.timeout != days
@@ -72,7 +72,7 @@ class ProjectStateController < ApplicationController
       flash[:warning] = l(:conf_not_admin)
     end
 
-    if update(params)
+    if was_updated(params)
       flash[:notice] = l(:conf_fields_updated)
     end
 
@@ -87,34 +87,21 @@ class ProjectStateController < ApplicationController
       val = tld.nil? ? 0 : tld.hours
       @tracker2hours[id] = val
       @trackers[id] = t
-      t.workflow_rules.each do |w|
-        status_ids.add(w.old_status_id) unless w.old_status_id.nil?
-        status_ids.add(w.new_status_id) unless w.new_status_id.nil?
-      end
     end
     @torder = @trackers.keys.sort{|a,b| @trackers[a].name <=> @trackers[b].name}
-    sarray = status_ids.each.sort
-    stats = IssueStatus.where(id: sarray)
+
+    @status2days = {}
     @statuses = {}
-    stats.each do |st|
-      @statuses[st.id] = st
+    @statusTimeout_labels = {}
+    @statusTimeout_tags = {}
+    StatusTimeoutDefault.all.each do |s|
+      stat = IssueStatus.find(s.status)
+      @statuses[s.status] = stat
+      @status2days[s.status] = s.timeout
+      @statusTimeout_labels[s.status] = "%s (%s)" % [stat.name,StatusStateMapping.find_by(status: stat.id).state]
+      @statusTimeout_tags[s.status] = "state_%d" % s.status
     end
     @sorder = @statuses.keys.sort{|a,b| @statuses[a].position <=> @statuses[b].position}
-
-    @state2days = {}
-    @states = {}
-    @state_order = []
-    INTERESTING.each do |s|
-      tag = "state_%s" % s
-      @state_order << tag
-      @states[tag] = s
-      begin
-        v = StateTimeoutDefault.find_by(state: s).timeout
-      rescue
-        v = 0
-      end
-      @state2days[tag] = v
-    end
 
     @status2state = {}
     @state_options = []

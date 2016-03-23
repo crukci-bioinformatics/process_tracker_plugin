@@ -86,10 +86,8 @@ var chart = new Highcharts.Chart({
     <% (0..(@labels.length-1)).each do |i| %>
       <% s_list = @setnewopening[i] %>
       <% sfirst = true %>
-      <% $pslog.debug("s_issues_template: #{s_list.map{|x| x.id}}") %>
       <% (0..(s_list.length-1)).each do |j| %>
         <% iss = s_list[j] %>
-        <% $pslog.debug("iss: #{iss}") %>
         <tr>
           <td><%= ifirst ? @labels[i] : "" %></td>
           <td><%= sfirst ? "Opening (new)" : "" %></td>
@@ -102,10 +100,8 @@ var chart = new Highcharts.Chart({
       <% end %>
       <% s_list = @setreopening[i] %>
       <% sfirst = true %>
-      <% $pslog.debug("s_issues_template: #{s_list.map{|x| x.id}}") %>
       <% (0..(s_list.length-1)).each do |j| %>
         <% iss = s_list[j] %>
-        <% $pslog.debug("iss: #{iss}") %>
         <tr>
           <td><%= ifirst ? @labels[i] : "" %></td>
           <td><%= sfirst ? "Reopening" : "" %></td>
@@ -118,10 +114,8 @@ var chart = new Highcharts.Chart({
       <% end %>
       <% s_list = @setclosing[i] %>
       <% sfirst = true %>
-      <% $pslog.debug("s_issues_template: #{s_list.map{|x| x.id}}") %>
       <% (0..(s_list.length-1)).each do |j| %>
         <% iss = s_list[j] %>
-        <% $pslog.debug("iss: #{iss}") %>
         <tr>
           <td><%= ifirst ? @labels[i] : "" %></td>
           <td><%= sfirst ? "Closing" : "" %></td>

@@ -37,7 +37,6 @@ module ProjectStatePlugin
       end
   
       # check time in state (or since last logged time, if 'Active')
-      on_hold = IssueStatus.find_by(name: 'On Hold').id
       interval = days_in_state(issue)
       if interval > issue.state_timeout
         if issue.state == 'Active'
@@ -45,7 +44,7 @@ module ProjectStatePlugin
                      :state => issue.state,
                      :actual => interval,
                      :threshold => issue.state_timeout)
-        elsif issue.status_id != on_hold
+        else
           flags << l(:flag_days_in_state,
                      :state => issue.state,
                      :actual => interval,
