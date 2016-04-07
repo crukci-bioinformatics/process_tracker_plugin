@@ -10,6 +10,7 @@ var chart = new Highcharts.Chart({
             categories: <%=raw @labels %>
         },
         yAxis: {
+            min: 0,
             title: {
                 text: '<%= l(:report_states_yaxis) %>'
             }
