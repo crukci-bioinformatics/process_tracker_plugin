@@ -23,7 +23,7 @@ Redmine::Plugin.register :project_state do
                          'billable' => 'Research Groups; Fitzgerald'},
            :partial => 'settings/project_state_settings' )
 
-  menu :top_menu, :states, { controller: 'project_state/summary', action: 'index' }, caption: :project_state_caption, after: :myprojects
+  menu :top_menu, :states, { controller: 'project_state/summary', action: 'index', report: 'stark' }, caption: :project_state_caption, after: :myprojects
   menu :top_menu, :ps_user, '/project_state/user', caption: :project_my_state_caption, after: :states
   menu :top_menu, :reports, { controller: 'project_state/project_state_reports', action: 'index' }, caption: :project_reports_caption, after: :ps_user
 

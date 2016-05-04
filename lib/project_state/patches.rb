@@ -76,12 +76,26 @@ module ProjectStatePlugin
   end
 
   module ProjectPatch
+    include ProjectStatePlugin::Defaults
+
     def self.included(base)
       base.class_eval do
         def proj_ids
           ids = [self.id]
           ids = ids.concat(Project.where(parent: self).map{|p| p.proj_ids})
           return ids.flatten
+        end
+        def cost_centre
+          cf = ProjectCustomField.find_by(name: CUSTOM_PROJ_COSTCODE)
+          code = self.custom_values.find_by(custom_field: cf)
+          if code.nil? || code.value == ""
+            proj = self
+            while (! proj.parent_id.nil?) && (code.nil? || code.value == "")
+              proj = proj.parent
+              code = proj.custom_values.find_by(custom_field: cf)
+            end
+          end
+          return code
         end
       end
     end

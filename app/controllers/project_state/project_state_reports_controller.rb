@@ -76,7 +76,11 @@ class ProjectState::ProjectStateReportsController < ApplicationController
       if leavelist.include? log.project_id
         @absent[u][ind] += log.hours
       else
-        cc = log.issue.cost_centre
+        begin
+          cc = log.issue.cost_centre
+        rescue NoMethodError
+          cc = log.project.cost_centre
+        end
         if !cc.nil? && !(cc == "")
           @times[u][ind] += log.hours
         end
