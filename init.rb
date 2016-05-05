@@ -7,7 +7,7 @@ Redmine::Plugin.register :project_state do
   name 'Project State plugin'
   author 'Gord Brown'
   description 'Track project states, notify if/when various conditions occur'
-  version '1.1.17'
+  version '1.1.18'
   url 'https://github.com/crukci-bioinformatics/process_tracker_plugin'
   author_url 'http://gdbrown.org/blog/'
 
