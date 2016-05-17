@@ -233,6 +233,57 @@ module ProjectStatePlugin
       $psrand.rand(x*2) - x
     end
 
+    def hours_current_average_data()
+      okay = true
+      @times = {}
+      @projects = {}
+      rg_pid = Project.find_by(name: 'Research Groups').id
+      projlist = collectProjects(Setting.plugin_project_state['billable'])
+      projlist.delete(rg_pid)
+      Project.where(id: projlist).each do |proj|
+        @projects[proj.id] = proj
+        @times[proj.id] = [0.0] * @ends.length
+      end
+      ind = 0
+      TimeEntry.where(spent_on: @from..(@ends[-1]-1)).order(:spent_on).each do |log|
+        pid = log.project_id
+        if projlist.include? pid
+          begin
+            while log.spent_on >= @ends[ind]
+              ind += 1
+            end
+          rescue
+            $pslog.error("ind=#{ind} len=#{@ends.length} log=#{log.spent_on} to=#{@to} ends[-1]=#{@ends[-1]}")
+            break
+          end
+          @times[pid][ind] += log.hours
+        end
+      end
+      collapse_projects(rg_pid)
+      @current = []
+      @average = []
+      @pids = @projects.keys.sort{|a,b| @projects[a].name <=> @projects[b].name}
+      @current_show = []
+      @average_show = []
+      @labels_show = []
+      @pids.each do |pid|
+        @current << @times[pid][-1]
+        @average << (@times[pid].sum / @times[pid].length).round(2)
+        if @current[-1] >= 1.0 || @average[-1] >= 1.0
+          @current_show << @current[-1]
+          @average_show << @average[-1]
+          @labels_show << @projects[pid].name
+        end
+      end
+      @avg_tag = "#{@labels.length} #{@interval_label} average"
+      @cur_tag = @labels[-1]
+      @labels = @pids.each.map{|p| @projects[p].name}
+      if @params['format'] == 'csv'
+        hours_current_and_average_csv
+      end
+      return okay
+    end
+
     class TimeWaitingRecord < Struct.new(:interval,:days,:issue,:entered_on,:left_on)
     end
 
