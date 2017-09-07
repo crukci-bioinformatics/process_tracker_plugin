@@ -1,5 +1,6 @@
 require 'project_state/defaults'
 require 'project_state/utils'
+require 'bioinf_common/utils'
 
 module ProjectStatePlugin
   module IssueFilter
@@ -7,6 +8,7 @@ module ProjectStatePlugin
     include ActionView::Helpers::NumberHelper
     include ProjectStatePlugin::Defaults
     include ProjectStatePlugin::Utilities
+    include BioinfCommon::Utilities
 
     def days_in_state(issue)
       seconds = 60 * 60 * 24

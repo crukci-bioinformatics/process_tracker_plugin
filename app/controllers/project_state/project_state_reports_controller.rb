@@ -4,12 +4,14 @@ require 'set'
 
 require 'simple_xlsx_reader'
 require 'project_state/utils'
+require 'bioinf_common/utils'
 require 'project_state/finance'
 require 'project_state/snapshot'
 require 'project_state/reports'
 
 class ProjectState::ProjectStateReportsController < ApplicationController
   include ProjectStatePlugin::Utilities
+  include BioinfCommon::Utilities
   include ProjectStatePlugin::Reports
 
   unloadable

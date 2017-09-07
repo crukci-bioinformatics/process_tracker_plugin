@@ -1,9 +1,11 @@
 require 'date'
 require 'project_state/utils'
+require 'bioinf_common/utils'
 require 'project_state/issue_filter'
 
 class ProjectState::UsersController < ApplicationController
   include ProjectStatePlugin::Utilities
+  include BioinfCommon::Utilities
   include ProjectStatePlugin::IssueFilter
 
 

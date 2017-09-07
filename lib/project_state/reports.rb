@@ -1,8 +1,10 @@
 require 'project_state/utils'
+require 'bioinf_common/utils'
 
 module ProjectStatePlugin
   module Reports
     include ProjectStatePlugin::Utilities
+    include BioinfCommon::Utilities
     include ProjectStatePlugin::Defaults
 
     # Labels for periods (date ranges), with identifying strings
@@ -339,14 +341,17 @@ module ProjectStatePlugin
         @ready_lists << ready_l.sort!{|a,b| b.days <=> a.days}
         @pend_lists << pend_l.sort!{|a,b| b.days <=> a.days}
         @hold_lists << hold_l.sort!{|a,b| b.days <=> a.days}
-        ready_l.each { |ready| @data_ready << [ready.interval-0.2+jitter(0.1),ready.days] }
-        pend_l.each { |pend| @data_pend << [pend.interval+jitter(0.1),pend.days] }
-        hold_l.each { |hold| @data_hold << [hold.interval+0.2+jitter(0.1),hold.days] }
+        ready_l.each { |ready| @data_ready << "{ x : #{ready.interval-0.2+jitter(0.1)}, y : #{ready.days}, word : \"#{ready.issue.id}\" }" }
+        pend_l.each { |pend| @data_pend << "{ x : #{pend.interval+jitter(0.1)}, y : #{pend.days}, word : \"#{pend.issue.id}\" }" }
+        hold_l.each { |hold| @data_hold << "{ x : #{hold.interval+0.2+jitter(0.1)}, y : #{hold.days}, word : \"#{hold.issue.id}\" }" }
         ready_l = []
         pend_l = []
         hold_l = []
         start = fin
       end
+      @data_ready = @data_ready.join(", ")
+      @data_pend = @data_pend.join(", ")
+      @data_hold = @data_hold.join(", ")
       return true
     end
 

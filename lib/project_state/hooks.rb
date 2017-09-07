@@ -187,7 +187,7 @@ module ProjectStatePlugin
       # logic: state always follows status, with no notification.
       # But hour limit and state timeout are either
       #  a) preserved but notified if the change was manual, or
-      #  b) reset to the defaults with no notif.
+      #  b) reset to the defaults with no notification.
       ps_custom[psid] = StatusStateMapping.find_by(status: iss.status_id).state
       if manual.include?(stid) && manual[stid][:old].to_i < manual[stid][:new].to_i
         @project_state_notify[:state_timeout] = manual[stid]

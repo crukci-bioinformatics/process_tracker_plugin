@@ -1,6 +1,7 @@
 require 'logger'
 
 require_dependency File.expand_path(File.dirname(__FILE__)+'/utils')
+require 'bioinf_common/utils'
 
 module ProjectStatePlugin
 
@@ -8,6 +9,7 @@ module ProjectStatePlugin
     include Redmine::I18n
     include ProjectStatePlugin::Defaults
     include ProjectStatePlugin::Utilities
+    include BioinfCommon::Utilities
 
     def add_to_trackers(cf)
       begin

@@ -3,6 +3,7 @@ require 'i18n'
 require 'simple_xlsx_reader'
 require_dependency File.expand_path(File.dirname(__FILE__)+'/../project_state/finance')
 require_dependency File.expand_path(File.dirname(__FILE__)+'/../project_state/utils')
+#require 'bioinf_common/utils'
 
 
 namespace :redmine do
@@ -11,6 +12,7 @@ namespace :redmine do
     desc "Update research group cost centres from spreadsheet"
     task :update_costcodes, [:filename,:year,:month] => [:environment] do |t,args|
       include ProjectStatePlugin::Utilities
+      include BioinfCommon::Utilities
 
       # load spreadsheet, get results for year, month
       sheet = FinanceSheet.new(args[:filename])

@@ -18,20 +18,30 @@ var chart = new Highcharts.Chart({
         },
         plotOptions: {
           series: {
-            animation: false
+            animation: false,
+            point: {
+              events: {
+                click: function(e) {
+                  window.open("/issues/"+this.word);
+                }
+              }
+            }
           }
+        },
+        tooltip: {
+          pointFormat: "Issue: {point.word}  Days: {point.y}"
         },
         series: [
             { name: '<%= l(:report_waiting_ready) %>',
-              data: <%= @data_ready %>,
+              data: [ <%=raw @data_ready %> ],
               visible: true
             },
             { name: '<%= l(:report_waiting_pend) %>',
-              data: <%= @data_pend %>,
+              data: [ <%=raw @data_pend %> ],
               visible: true
             },
             { name: '<%= l(:report_waiting_hold) %>',
-              data: <%= @data_hold %>,
+              data: [ <%=raw @data_hold %> ],
               visible: true
             }
         ],
