@@ -1,7 +1,7 @@
 require 'redmine'
-require_dependency 'project_state/hooks'
-require_dependency 'project_state/patches'
-require_dependency 'project_state/initialization'
+require 'project_state/hooks'
+require 'project_state/patches'
+require 'project_state/initialization'
 
 Redmine::Plugin.register :project_state do
   name 'Project State plugin'

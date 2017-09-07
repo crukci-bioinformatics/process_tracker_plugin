@@ -1,4 +1,4 @@
-require_dependency File.expand_path(File.dirname(__FILE__)+'/../project_state/snapshot')
+require File.expand_path(File.dirname(__FILE__)+'/../project_state/snapshot')
 
 namespace :redmine do
   namespace :project_state do

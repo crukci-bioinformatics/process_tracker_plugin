@@ -1,6 +1,6 @@
 require 'logger'
 
-require_dependency File.expand_path(File.dirname(__FILE__)+'/utils')
+require File.expand_path(File.dirname(__FILE__)+'/utils')
 
 module ProjectStatePlugin
 

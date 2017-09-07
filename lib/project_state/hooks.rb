@@ -1,8 +1,8 @@
 require 'date'
 require 'stringio'
 
-require_dependency File.expand_path(File.dirname(__FILE__)+'/utils')
-require_dependency File.expand_path(File.dirname(__FILE__)+'/issue_filter')
+require File.expand_path(File.dirname(__FILE__)+'/utils')
+require File.expand_path(File.dirname(__FILE__)+'/issue_filter')
 
 # Various actions must be taken when issues are created or edited.  This
 # description attempts to capture that.

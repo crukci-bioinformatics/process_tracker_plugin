@@ -1,4 +1,4 @@
-require_dependency File.expand_path(File.dirname(__FILE__)+'/../lib/project_state/utils')
+require File.expand_path(File.dirname(__FILE__)+'/../lib/project_state/utils')
 
 class ProjectStatePopulateDb
   include ProjectStatePlugin::Defaults

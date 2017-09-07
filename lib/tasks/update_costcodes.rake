@@ -1,8 +1,8 @@
 require 'i18n'
 
 require 'simple_xlsx_reader'
-require_dependency File.expand_path(File.dirname(__FILE__)+'/../project_state/finance')
-require_dependency File.expand_path(File.dirname(__FILE__)+'/../project_state/utils')
+require File.expand_path(File.dirname(__FILE__)+'/../project_state/finance')
+require File.expand_path(File.dirname(__FILE__)+'/../project_state/utils')
 
 
 namespace :redmine do
