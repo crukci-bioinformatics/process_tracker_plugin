@@ -1,0 +1,25 @@
+<h3>Closing and Waiting Issues</h3>
+
+<table id="ps_counts">
+  <thead>
+    <tr>
+      <th>Issue</th>
+      <th>Status</th>
+      <th>Date</th>
+      <th>Title</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @waiting.each do |u| %>
+      <tr>
+        <td><a href="<%= issue_url(u.issue.id) %>"><%= u.issue.id %></a></td>
+        <td><%= @statuses.fetch(u.status) %></td>
+        <td><%= u.entered_on %></td>
+        <td><%= u.issue.subject %></td>
+        <% if u.issue.status_id != u.status %>
+          <td>(now <%= IssueStatus.find_by(id: u.issue.status_id).name %>)</td>
+        <% end %>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

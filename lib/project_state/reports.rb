@@ -340,5 +340,31 @@ module ProjectStatePlugin
       end
       return okay
     end
+
+    class ClosingWaitingRecord < Struct.new(:issue,:status,:entered_on)
+    end
+
+    def closing_waiting_data()
+      okay = true
+      projlist = collectProjects(Setting.plugin_project_state['root_projects'])
+      @projects = Set.new()
+      projlist.each do |p|
+        @projects.add(p)
+      end
+      @statuses = {}
+      @statuses[IssueStatus.find_by(name: "Closed").id] = "Closed"
+      @statuses[IssueStatus.find_by(name: "Waiting").id] = "Waiting"
+      @waiting = Set.new()
+      Journal.where(created_on: @from..@to).each do |j|
+        j.details.each do |jd|
+          if jd.property == "attr" && jd.prop_key == "status_id" && @statuses.has_key?(jd.value.to_i)
+            if @projects.include?(j.issue.project_id)
+              @waiting << ClosingWaitingRecord.new(j.issue,jd.value.to_i,j.created_on)
+            end
+          end
+        end
+      end
+      return okay
+    end
   end
 end

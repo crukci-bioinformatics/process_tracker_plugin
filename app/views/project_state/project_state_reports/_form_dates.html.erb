@@ -8,9 +8,9 @@
     <div><%= radio_button_tag :date_type, '2', @params['date_type']=='2' %>
          <label class="noblock" for=:date_type_2><%= l(:report_date_type_open) %></label>
          <label for=:report_date_from><%= l(:report_date_from) %></label>
-         <%= text_field_tag :report_date_from, value=@params['report_date_from'],  options={size: 10} %><%= calendar_for(:report_date_from) %>
+         <%= date_field_tag :report_date_from, value=@params['report_date_from'],  options={size: 10} %><%= calendar_for(:report_date_from) %>
          <label for='report_date_to'><%= l(:report_date_to) %></label>
-         <%= text_field_tag :report_date_to, value=@params['report_date_to'], options={size: 10} %><%= calendar_for(:report_date_to) %>
+         <%= date_field_tag :report_date_to, value=@params['report_date_to'], options={size: 10} %><%= calendar_for(:report_date_to) %>
     </div>
     <% if @report.want_interval %>
       <div>

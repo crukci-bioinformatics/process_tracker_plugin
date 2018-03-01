@@ -321,6 +321,11 @@ class ProjectState::ProjectStateReportsController < ApplicationController
     @make_plot = true
   end
 
+  def closing_waiting()
+    @okay = closing_waiting_data()
+    @make_plot = false
+  end
+
   def finance_report_csv
     io = StringIO.new(string="",mode="w")
     io.printf("Grant,Code,Hours\n")
