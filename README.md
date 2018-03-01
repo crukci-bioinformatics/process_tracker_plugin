@@ -66,7 +66,7 @@ Redmine 3.1.0.
 When the plugin is installed, the plugin migration Rake task will create
 tables to store the default state timeouts, default logged-hour limits,
 and the mapping between statuses and states.  (This is a many-to-one mapping:
-each status must be associated with exactly one state, but several statues may
+each status must be associated with exactly one state, but several statuses may
 map to the same state.)
 
 When the Redmine server is started, several initialization steps take place:
