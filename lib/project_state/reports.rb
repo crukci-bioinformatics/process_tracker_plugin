@@ -4,6 +4,7 @@ module ProjectStatePlugin
   module Reports
     include ProjectStatePlugin::Utilities
     include ProjectStatePlugin::Defaults
+    include ProjectStatePlugin::IssueFilter
 
     # Labels for periods (date ranges), with identifying strings
     def ps_options_for_period
@@ -341,7 +342,7 @@ module ProjectStatePlugin
       return okay
     end
 
-    class ClosingWaitingRecord < Struct.new(:issue,:status,:entered_on)
+    class ClosingWaitingRecord < Struct.new(:status,:entered_on)
     end
 
     def closing_waiting_data()
@@ -354,16 +355,23 @@ module ProjectStatePlugin
       @statuses = {}
       @statuses[IssueStatus.find_by(name: "Closed").id] = "Closed"
       @statuses[IssueStatus.find_by(name: "Waiting").id] = "Waiting"
-      @waiting = Set.new()
-      Journal.where(created_on: @from..@to).each do |j|
-        j.details.each do |jd|
-          if jd.property == "attr" && jd.prop_key == "status_id" && @statuses.has_key?(jd.value.to_i)
-            if @projects.include?(j.issue.project_id)
-              @waiting << ClosingWaitingRecord.new(j.issue,jd.value.to_i,j.created_on)
+      @waiting = []
+      @dates = {}
+      seen = Set.new()
+      entries = Journal.where(created_on: @from..@to).to_a
+      entries.reverse_each do |j|
+        if not seen.include?(j.issue.id)
+          seen.add(j.issue.id)
+          j.details.each do |jd|
+            if jd.property == "attr" && jd.prop_key == "status_id" && @statuses.has_key?(jd.value.to_i)
+              @waiting << j.issue
+              @dates[j.issue.id] = ClosingWaitingRecord.new(jd.value.to_i,j.created_on)
             end
           end
         end
       end
+      @waiting = filter_issues(@waiting)
+      @waiting.reverse!
       return okay
     end
   end

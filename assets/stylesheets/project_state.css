@@ -36,6 +36,12 @@ table#ps_waiting tr#wait_state_line { font-weight: bold; font-size: 75%; backgro
 table#ps_limit_changes tbody tr:nth-child(even) { background: #B2F0D1; }
 table#ps_limit_changes tbody tr:nth-child(odd) { background: #E6FAF0; }
 
+table#ps_waiting tbody tr:nth-child(even) { background: #B2F0D1; }
+table#ps_waiting tbody tr:nth-child(odd) { background: #E6FAF0; }
+table#ps_waiting th { cursor: pointer; }
+table#ps_waiting th, td { text-align: left; }
+table#ps_waiting td.hidden { display:none; }
+
 div#project_state_date_form fieldset > div { float: left; padding: 5px 10px; }
 div#project_state_date_form label { display: block; }
 div#project_state_date_form label.noblock { display: inline; }

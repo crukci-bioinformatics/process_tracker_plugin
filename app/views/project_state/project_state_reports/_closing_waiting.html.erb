@@ -1,23 +1,27 @@
 <h3>Closing and Waiting Issues</h3>
 
-<table id="ps_counts">
+<table id="ps_waiting">
   <thead>
     <tr>
-      <th>Issue</th>
-      <th>Status</th>
-      <th>Date</th>
-      <th>Title</th>
+      <th onclick="sortTable(0)">Issue</th>
+      <th onclick="sortTable(1)">Status</th>
+      <th onclick="sortTable(3)">Date</th>
+      <th onclick="sortTable(4)">Assignee</th>
+      <th onclick="sortTable(5)">Title</th>
     </tr>
   </thead>
   <tbody>
-    <% @waiting.each do |u| %>
+    <% @waiting.each do |iss| %>
+      <% u = @dates[iss.id] %>
       <tr>
-        <td><a href="<%= issue_url(u.issue.id) %>"><%= u.issue.id %></a></td>
+        <td><a href="<%= issue_url(iss.id) %>"><%= iss.id %></a></td>
         <td><%= @statuses.fetch(u.status) %></td>
-        <td><%= u.entered_on %></td>
-        <td><%= u.issue.subject %></td>
-        <% if u.issue.status_id != u.status %>
-          <td>(now <%= IssueStatus.find_by(id: u.issue.status_id).name %>)</td>
+        <td><%= u.entered_on.strftime("%Y-%b-%d") %></td>
+        <td class="hidden"><%= u.entered_on%></td>
+        <td><%= iss.assigned_to.nil? ? "unassigned" : iss.assigned_to.firstname %></td>
+        <td><%= iss.subject %></td>
+        <% if iss.status_id != u.status %>
+          <td>(now <%= IssueStatus.find_by(id: iss.status_id).name %>)</td>
         <% end %>
       </tr>
     <% end %>
