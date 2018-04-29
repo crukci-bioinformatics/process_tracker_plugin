@@ -7,7 +7,8 @@
       <th onclick="sortTable(1)">Status</th>
       <th onclick="sortTable(3)">Date</th>
       <th onclick="sortTable(4)">Assignee</th>
-      <th onclick="sortTable(5)">Title</th>
+      <th onclick="sortTable(5)">Reviewed</th>
+      <th onclick="sortTable(6)">Title</th>
     </tr>
   </thead>
   <tbody>
@@ -19,6 +20,7 @@
         <td><%= u.entered_on.strftime("%Y-%b-%d") %></td>
         <td class="hidden"><%= u.entered_on%></td>
         <td><%= iss.assigned_to.nil? ? "unassigned" : iss.assigned_to.firstname %></td>
+        <td><%= u.reviewed %></td>
         <td><%= iss.subject %></td>
         <% if iss.status_id != u.status %>
           <td>(now <%= IssueStatus.find_by(id: iss.status_id).name %>)</td>

@@ -342,7 +342,7 @@ module ProjectStatePlugin
       return okay
     end
 
-    class ClosingWaitingRecord < Struct.new(:status,:entered_on)
+    class ClosingWaitingRecord < Struct.new(:status,:entered_on,:reviewed)
     end
 
     def closing_waiting_data()
@@ -352,6 +352,7 @@ module ProjectStatePlugin
       projlist.each do |p|
         @projects.add(p)
       end
+      reviewed = CustomField.find_by(name: 'Reviewed')
       @statuses = {}
       @statuses[IssueStatus.find_by(name: "Closed").id] = "Closed"
       @statuses[IssueStatus.find_by(name: "Waiting").id] = "Waiting"
@@ -365,7 +366,10 @@ module ProjectStatePlugin
           j.details.each do |jd|
             if jd.property == "attr" && jd.prop_key == "status_id" && @statuses.has_key?(jd.value.to_i)
               @waiting << j.issue
-              @dates[j.issue.id] = ClosingWaitingRecord.new(jd.value.to_i,j.created_on)
+              # remember: iss.custom_value_for(reviewed).value
+              reviewobj = j.issue.custom_value_for(reviewed)
+              reviewstat = reviewobj.nil? ? "": reviewobj.value
+              @dates[j.issue.id] = ClosingWaitingRecord.new(jd.value.to_i,j.created_on,reviewstat)
             end
           end
         end
