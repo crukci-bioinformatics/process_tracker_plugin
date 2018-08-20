@@ -3,6 +3,7 @@ require 'stringio'
 
 require File.expand_path(File.dirname(__FILE__)+'/utils')
 require File.expand_path(File.dirname(__FILE__)+'/issue_filter')
+require File.expand_path(File.dirname(__FILE__)+'/audit_utils')
 
 # Various actions must be taken when issues are created or edited.  This
 # description attempts to capture that.
@@ -10,6 +11,8 @@ require File.expand_path(File.dirname(__FILE__)+'/issue_filter')
 # When an issue is created:
 #   before save:
 #     1) set the state to match the status, disregarding its set value.
+#        But only set it if the issue's project and tracker want a
+#        state value.
 #     2) state timeout:
 #        a) if it was set, allow and notify
 #        b) if not set, set to match the state.
@@ -19,7 +22,7 @@ require File.expand_path(File.dirname(__FILE__)+'/issue_filter')
 #   after save:
 #     1) generate a journal entry indicating the creation of the issue,
 #        in particular reporting its state changing from 'new' to the actual
-#        state.
+#        state.  **** NEW ****: DON'T DO THIS.
 #     2) If notify flag is set, send email
 #        Note that we wait until after the save to send the email, in case the
 #        save fails for other reasons.
@@ -51,6 +54,7 @@ module ProjectStatePlugin
     include ProjectStatePlugin::Defaults
     include ProjectStatePlugin::IssueFilter
     include ProjectStatePlugin::Utilities
+    include ProjectStatePlugin::AuditUtils
 
     def whats_manually_set(issue)
       manual = {}
@@ -59,6 +63,9 @@ module ProjectStatePlugin
       end
       if issue.status_id_changed?
         manual['status'] = {old: issue.status_id_was, new: issue.status_id}
+      end
+      if issue.project_id_changed?
+        manual['project'] = {old: issue.project_id_was, new: issue.project_id}
       end
 
       issue.custom_field_values.each do |cfv|
@@ -111,6 +118,19 @@ module ProjectStatePlugin
       @project_state_notify = {}
       ps_custom = {}
 
+      printf("XXXXXXX Edit Before Save XXXXXXX\n")
+      manual.each_pair do |k,v|
+        printf("  #{k} : '#{v}'\n")
+      end
+      printf("\n")
+      printf("  status: #{status(iss.status_id)}\n")
+      printf("  state: #{iss.state}\n")
+      printf("  project: #{projectName(iss.project_id)}\n")
+      printf("  tracker: #{trackerName(iss.tracker_id)}\n")
+
+      wantPS = trackerNeedsPS?(iss.tracker_id) && projectNeedsPS?(iss.project_id)
+      printf("  wantPS: #{wantPS}\n")
+      
       # Cases
 
       st_changed = false
@@ -118,7 +138,7 @@ module ProjectStatePlugin
       # to a new project, where it now needs a state)!
       # Otherwise, this case is handled elsewhere, in the validation
       # method patched into "Issue"
-      if iss.project_id_changed? && manual.include?(psid) && manual[psid][:old].nil?
+      if (iss.project_id_changed? || iss.tracker_id_changed?) && manual.include?(psid) && manual[psid][:old].nil?
         # was not formerly set, so set up with defaults
         st_changed = true
         st_val = StatusStateMapping.find_by(status: iss.status_id).state
@@ -131,9 +151,9 @@ module ProjectStatePlugin
         target = StatusStateMapping.find_by(status: nstatus).state
         if target != nstate
           ps_custom[psid] = target
+          st_changed = true
+          st_val = target
         end
-        st_changed = true
-        st_val = target
  
       # State did not change and status did: relatively simple
       elsif !manual.include?(psid) && manual.include?("status")
@@ -175,34 +195,42 @@ module ProjectStatePlugin
 
     def controller_issues_new_before_save(context={})
       iss = context[:issue]
-      manual = whats_manually_set(iss)
 
-      stid = CustomField.find_by(name: CUSTOM_STATE_TIMEOUT).id.to_s
-      hlid = CustomField.find_by(name: CUSTOM_HOUR_LIMIT).id.to_s
-      psid = CustomField.find_by(name: CUSTOM_PROJECT_STATE).id.to_s
+      psid = CustomField.find_by(name: CUSTOM_PROJECT_STATE).id
+      tracker_wants_PS = iss.tracker.custom_fields.where(id: psid).length > 0
 
-      @project_state_notify = {}
-      ps_custom = {}
+      STDOUT.printf("********** About to set CF: wants=#{tracker_wants_PS}\n")
+      if tracker_wants_PS
+#      if true
+        STDOUT.printf("********* Really creating it...\n")
+        manual = whats_manually_set(iss)
+        stid = CustomField.find_by(name: CUSTOM_STATE_TIMEOUT).id.to_s
+        hlid = CustomField.find_by(name: CUSTOM_HOUR_LIMIT).id.to_s
+        psid = psid.to_s
 
-      # logic: state always follows status, with no notification.
-      # But hour limit and state timeout are either
-      #  a) preserved but notified if the change was manual, or
-      #  b) reset to the defaults with no notif.
-      ps_custom[psid] = StatusStateMapping.find_by(status: iss.status_id).state
-      if manual.include?(stid) && manual[stid][:old].to_i < manual[stid][:new].to_i
-        @project_state_notify[:state_timeout] = manual[stid]
-      else
-        std = StatusTimeoutDefault.find_by(status: iss.status_id)
-        ps_custom[stid] = std.timeout.to_s if !std.nil?
+        @project_state_notify = {}
+        ps_custom = {}
+
+        # logic: state always follows status, with no notification.
+        # But hour limit and state timeout are either
+        #  a) preserved but notified if the change was manual, or
+        #  b) reset to the defaults with no notif.
+        ps_custom[psid] = StatusStateMapping.find_by(status: iss.status_id).state
+        if manual.include?(stid) && manual[stid][:old].to_i < manual[stid][:new].to_i
+          @project_state_notify[:state_timeout] = manual[stid]
+        else
+          std = StatusTimeoutDefault.find_by(status: iss.status_id)
+          ps_custom[stid] = std.timeout.to_s if !std.nil?
+        end
+        if manual.include?(hlid) && manual[hlid][:old].to_i < manual[hlid][:new].to_i
+          @project_state_notify[:hour_limit] = manual[hlid]
+        else
+          ps_custom[hlid] = TimeLimitDefault.find_by(tracker_id: iss.tracker_id).hours.to_s
+        end
+
+        # explicitly set the fields we need to.
+        iss.custom_field_values = ps_custom
       end
-      if manual.include?(hlid) && manual[hlid][:old].to_i < manual[hlid][:new].to_i
-        @project_state_notify[:hour_limit] = manual[hlid]
-      else
-        ps_custom[hlid] = TimeLimitDefault.find_by(tracker_id: iss.tracker_id).hours.to_s
-      end
-
-      # explicitly set the fields we need to.
-      iss.custom_field_values = ps_custom
     end
 
     def controller_issues_new_after_save(context={})
@@ -211,16 +239,16 @@ module ProjectStatePlugin
       cf = iss.custom_value_for(psid)
       return if cf.nil?
 
-      journal = Journal.create(journalized_id: iss.id,
-                               journalized_type: 'Issue',
-                               user: User.current,
-                               created_on: DateTime.now,
-                               private_notes: 0) do |je|
-        je.details << JournalDetail.new(property: 'cf',
-                                        prop_key: psid,
-                                        old_value: 'new',
-                                        value: cf.value)
-      end
+#      journal = Journal.create(journalized_id: iss.id,
+#                               journalized_type: 'Issue',
+#                               user: User.current,
+#                               created_on: DateTime.now,
+#                               private_notes: 0) do |je|
+#        je.details << JournalDetail.new(property: 'cf',
+#                                        prop_key: psid,
+#                                        old_value: 'new',
+#                                        value: cf.value)
+#      end
 
       email_notification(iss,@project_state_notify,true) if @project_state_notify.size > 0
     end

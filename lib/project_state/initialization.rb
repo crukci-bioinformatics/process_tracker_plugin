@@ -133,34 +133,45 @@ module ProjectStatePlugin
       pstate = CustomField.find_by(name: CUSTOM_PROJECT_STATE)
       stime = CustomField.find_by(name: CUSTOM_STATE_TIMEOUT)
       hlim = CustomField.find_by(name: CUSTOM_HOUR_LIMIT)
+      ps_id =  CustomField.find_by(name: 'Project State').id
+
+      # make a tracker map: which ones should have a project state etc
+      trackersPS = {}
+      Tracker.all.each do |trak|
+        if trak.custom_fields.where(id: ps_id).length > 0
+          trackersPS[trak.id] = trak
+        end
+      end
+
       projSet.each do |proj|
         proj.issues.each do |iss|
-          ps = CustomValue.find_or_create_by(customized_id: iss.id,
-                                             customized_type: 'Issue',
-                                             custom_field: pstate) do |cv|
-            psd = StatusStateMapping.find_by(status: iss.status_id)
-            if !psd.nil?
-              cv.value = psd.state
-            else
-              cv.value = 'Ready'
+          if trackersPS.has_key?(iss.tracker_id)
+            ps = CustomValue.find_or_create_by(customized_id: iss.id,
+                                               customized_type: 'Issue',
+                                               custom_field: pstate) do |cv|
+              psd = StatusStateMapping.find_by(status: iss.status_id)
+              if !psd.nil?
+                cv.value = psd.state
+              else
+                cv.value = nil
+              end
+            end
+            CustomValue.find_or_create_by(customized_id: iss.id,
+                                          customized_type: 'Issue',
+                                          custom_field: stime) do |cv|
+              std = StatusTimeoutDefault.find_by(status: iss.status_id)
+              if std.nil?
+                cv.value = 0
+              else
+                cv.value = std.timeout.to_s
+              end
+            end
+            CustomValue.find_or_create_by(customized_id: iss.id,
+                                          customized_type: 'Issue',
+                                          custom_field: hlim) do |cv|
+              cv.value = TimeLimitDefault.find_by(tracker_id: iss.tracker_id).hours.to_s
             end
           end
-          CustomValue.find_or_create_by(customized_id: iss.id,
-                                        customized_type: 'Issue',
-                                        custom_field: stime) do |cv|
-            std = StatusTimeoutDefault.find_by(status: iss.status_id)
-            if std.nil?
-              cv.value = 0
-            else
-              cv.value = std.timeout.to_s
-            end
-          end
-          CustomValue.find_or_create_by(customized_id: iss.id,
-                                        customized_type: 'Issue',
-                                        custom_field: hlim) do |cv|
-            cv.value = TimeLimitDefault.find_by(tracker_id: iss.tracker_id).hours.to_s
-          end
-      
         end
       end
     end
