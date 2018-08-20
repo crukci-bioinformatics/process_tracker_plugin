@@ -7,7 +7,7 @@ Redmine::Plugin.register :project_state do
   name 'Project State plugin'
   author 'Gord Brown'
   description 'Track project states, notify if/when various conditions occur'
-  version '1.1.20'
+  version '1.1.21'
   url 'https://github.com/crukci-bioinformatics/process_tracker_plugin'
   author_url 'http://gdbrown.org/blog/'
 
@@ -16,7 +16,8 @@ Redmine::Plugin.register :project_state do
                          'filter_trackers' => 'Class I - Statistics',
                          'filter_projects' => 'External; Genomics; Proteomics; Other Core Facilities',
                          'filter_keepers' => 'Class I - Analysis',
-                         'ignore_trackers' => 'Bug; Feature; Support; Other',
+                         'ignore_trackers' => 'Bug; Feature; Support; Other; Class I - Statistics',
+                         'no_researcher' => 'Bug; Feature; Support; Other',
                          'non_chargeable' => 'Experimental Design Meetings; Statistics Clinic Meeting',
                          'holiday_url' => 'https://www.gov.uk/bank-holidays.json',
                          'logfile' => '/var/log/redmine/project_state.log',
