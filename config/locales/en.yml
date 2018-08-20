@@ -29,6 +29,8 @@ en:
   settings_filter_keepers_descr: "Issues with these trackers should be included in the 'Filtered Report' even if in filtered projects."
   settings_ignore_trackers_label: "Trackers to Ignore"
   settings_ignore_trackers_descr: "These trackers will be ignored by the project state plugin."
+  settings_no_researcher_label: "Trackers without Researcher Email"
+  settings_no_researcher_descr: "These trackers should not have a researcher email."
   settings_holiday_url_label: "URL to retrieve bank holidays"
   settings_holiday_url_descr: "This will return a JSON list of bank holidays.  Run the rake task 'redmine:project_state:bank_holidays' to refresh the list."
   settings_log_file_label: "Project State log file"

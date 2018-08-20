@@ -117,7 +117,7 @@ module ProjectStatePlugin
       dstfd = File.open(tpath,"w")
       dstfd.binmode
       buffer = srcfd.read(bufsize)
-      while (!buffer.nil?) and buffer.length > 0
+      while (!buffer.nil?) && buffer.length > 0
         dstfd.write(buffer)
         buffer = srcfd.read(bufsize)
       end

@@ -9,20 +9,25 @@ module ProjectStatePlugin
     include ProjectStatePlugin::Defaults
     include ProjectStatePlugin::Utilities
 
-    def add_to_trackers(cf)
+    def add_to_trackers(cf,analystOnly: true)
       begin
         omit = Tracker.where(name: semiString2List(Setting.plugin_project_state['ignore_trackers']))
       rescue
         return
       end
+      begin
+        no_researcher = Tracker.where(name: semiString2List(Setting.plugin_project_state['no_researcher']))
+      rescue
+        return
+      end
       Tracker.all.each do |t|
         if cf.trackers.include? t
-          if omit.include? t
+          if (analystOnly && omit.include?(t)) || (!analystOnly && no_researcher.include?(t))
             cf.trackers.delete(t)
             $pslog.info("Removing '%s' from tracker '%s'" % [cf.name,t.name])
           end
         else
-          if ! omit.include? t
+          if (analystOnly && !omit.include?(t)) || (!analystOnly && !no_researcher.include?(t))
             cf.trackers<<(t)
             $pslog.info("Adding '%s' to tracker '%s'" % [cf.name,t.name])
           end
@@ -95,8 +100,8 @@ module ProjectStatePlugin
       add_to_trackers(ps)
       add_to_trackers(st)
       add_to_trackers(hl)
-      add_to_trackers(rm)
-      add_to_trackers(an)
+      add_to_trackers(rm,analystOnly: false)
+      add_to_trackers(an,analystOnly: false)
 
     end
 
