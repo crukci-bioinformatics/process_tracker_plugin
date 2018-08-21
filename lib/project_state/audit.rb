@@ -24,25 +24,25 @@ module ProjectStatePlugin
       @issue = iss
       cons = true
 
-#      j = PSJournal.new(iss)
-#      cons = j.consistent?(msgs)
+      j = PSJournal.new(iss)
+      cons = j.consistent?(msgs)
 
       # check if actual status, state equal last journal entry
-#      last_status = j.last_status
-#      last_state = j.last_state
-#      if last_status != iss.status_id
-#        msgs << "Final journal status #{last_status} != current #{iss.status_id}"
-#        cons = false
-#      end
-#      current_ps = nil
-#      ps_obj = iss.custom_value_for(projectStateId)
-#      if !ps_obj.nil?
-#        current_ps = ps_obj.value
-#      end
-#      if last_state != current_ps
-#        msgs << "Final journal state #{last_state.nil? ? "nil" : last_state} != current #{current_ps.nil? ? "nil" : current_ps}"
-#        cons = false
-#      end
+      last_status = j.last_status
+      last_state = j.last_state
+      if last_status != iss.status_id
+        msgs << "Final journal status #{last_status} != current #{iss.status_id}"
+        cons = false
+      end
+      current_ps = nil
+      ps_obj = iss.custom_value_for(projectStateId)
+      if !ps_obj.nil?
+        current_ps = ps_obj.value
+      end
+      if last_state != current_ps
+        msgs << "Final journal state #{last_state.nil? ? "nil" : last_state} != current #{current_ps.nil? ? "nil" : current_ps}"
+        cons = false
+      end
 
       cons = false if !audit_current_state(iss,msgs)
       
