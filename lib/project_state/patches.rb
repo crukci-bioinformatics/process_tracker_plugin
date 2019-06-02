@@ -47,20 +47,21 @@ module ProjectStatePlugin
 
         def cost_centre
           cf = IssueCustomField.find_by(name: CUSTOM_ISS_COSTCODE)
-          code = self.custom_values.find_by(custom_field: cf)
-          if code.nil? || code.value == ""
-            cf = ProjectCustomField.find_by(name: CUSTOM_PROJ_COSTCODE)
+          cv_code = self.custom_values.find_by(custom_field: cf)
+          if cv_code.nil? || cv_code.value == ""
             proj = self.project
-            code = proj.custom_values.find_by(custom_field: cf)
-            if code.nil? || code.value == ""
-              while (! proj.parent_id.nil?) && (code.nil? || code.value == "")
+            code = proj.ppms_cost_centre
+            if code.nil? || code == ""
+              while (! proj.parent_id.nil?) && (code.nil? || code == "")
                 proj = proj.parent
-                code = proj.custom_values.find_by(custom_field: cf)
+                code = proj.ppms_cost_centre
               end
             end
+          else
+            code = cv_code.value
           end
           return nil if code.nil?
-          return code.value == "" ? nil : code.value
+          return code == "" ? nil : code
         end
 
         def researcher
