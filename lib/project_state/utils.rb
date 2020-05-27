@@ -136,33 +136,7 @@ module ProjectStatePlugin
     # A development of the above method, this takes the proportion
     # of a full time employee a user works (see workproportion()).
     def working_hours_by_proportion(day,proportion,interval='by_month')
-      case interval
-      when 'by_week'
-        first = day - day.wday
-        last = first + 7
-      when 'by_month'
-        first = day.beginning_of_month
-        last = first.next_month
-      when 'by_quarter'
-        first = day.beginning_of_quarter
-        last = day.end_of_quarter + 1
-      else
-        $pslog.error{"Illegal interval '#{interval}', cannot continue."}
-        abort("Goodbye...")
-      end
-      # Work like the method above with a standard working week to filter between
-      # work days and weekends.
-      dmap = standard_workdays()
-      bh = BankHoliday.where(holiday: first..(last-1)).length * ProjectStatePlugin::Defaults::HOURS_PER_DAY
-      d = first
-      wh = 0
-      while d < last
-        # If day is in the map of normal working days, add the standard number of hours.
-        wh += ProjectStatePlugin::Defaults::HOURS_PER_DAY if dmap.has_key? d.wday
-        d += 1
-      end
-      wh -= bh
-      return wh * proportion
+      return working_hours(day, standard_workdays(), interval) * proportion
     end
 
     def save_file(srcfd)
