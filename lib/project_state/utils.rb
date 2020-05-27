@@ -65,6 +65,16 @@ module ProjectStatePlugin
       return parms
     end
 
+    # A method that gives the standard working week at (default) 7 hours per day.
+    def standard_workdays()
+      workingDays = ['Mon','Tue','Wed','Thu','Fri']
+      days = {}
+      workingDays.each do |a|
+        days[Date::ABBR_DAYNAMES.find_index(a)] = ProjectStatePlugin::Defaults::HOURS_PER_DAY
+      end
+      return days
+    end
+      
     def workdays(u)
       cf = UserCustomField.find_by(name: 'Working Week')
       cv = CustomValue.find_by(customized: u, custom_field: cf)
@@ -79,6 +89,19 @@ module ProjectStatePlugin
         days[Date::ABBR_DAYNAMES.find_index(a)] = b.to_f
       end
       return days
+    end
+    
+    # The proportion of a full time employee this user is.
+    # Returns a float between 0 and 1.
+    def workproportion(u)
+      cf = UserCustomField.find_by(name: 'Proportion of Full Time')
+      cv = CustomValue.find_by(customized: u, custom_field: cf)
+      if cv.nil?
+        cv = cf.default_value
+      else
+        cv = cv.value
+      end
+      return cv.to_f
     end
 
     def working_hours(day,dmap,interval='by_month')
@@ -102,11 +125,44 @@ module ProjectStatePlugin
       d = first
       wh = 0
       while d < last
+        # If day is in the map of days worked, add the number of hours in that day.
         wh += dmap[d.wday] if dmap.has_key? d.wday
         d += 1
       end
       wh -= bh
       return wh
+    end
+
+    # A development of the above method, this takes the proportion
+    # of a full time employee a user works (see workproportion()).
+    def working_hours_by_proportion(day,proportion,interval='by_month')
+      case interval
+      when 'by_week'
+        first = day - day.wday
+        last = first + 7
+      when 'by_month'
+        first = day.beginning_of_month
+        last = first.next_month
+      when 'by_quarter'
+        first = day.beginning_of_quarter
+        last = day.end_of_quarter + 1
+      else
+        $pslog.error{"Illegal interval '#{interval}', cannot continue."}
+        abort("Goodbye...")
+      end
+      # Work like the method above with a standard working week to filter between
+      # work days and weekends.
+      dmap = standard_workdays()
+      bh = BankHoliday.where(holiday: first..(last-1)).length * ProjectStatePlugin::Defaults::HOURS_PER_DAY
+      d = first
+      wh = 0
+      while d < last
+        # If day is in the map of normal working days, add the standard number of hours.
+        wh += ProjectStatePlugin::Defaults::HOURS_PER_DAY if dmap.has_key? d.wday
+        d += 1
+      end
+      wh -= bh
+      return wh * proportion
     end
 
     def save_file(srcfd)

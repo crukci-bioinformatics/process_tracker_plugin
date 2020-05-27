@@ -88,7 +88,12 @@ class ProjectState::ProjectStateReportsController < ApplicationController
     end
     (0..(@ends.length - 1)).each do |i|
       @users.keys.each do |u|
-        wh = working_hours(@ends[i]-1,@wmap[u],@params['interval_type'])
+        wp = workproportion(u)
+        wh = working_hours_by_proportion(@ends[i]-1,wp,@params['interval_type'])
+
+        # Original version, using days and hours:
+        # wh = working_hours(@ends[i]-1,@wmap[u],@params['interval_type'])
+
         hours = @times[u][i]
         expected = wh - @absent[u][i]
         if expected > 0
