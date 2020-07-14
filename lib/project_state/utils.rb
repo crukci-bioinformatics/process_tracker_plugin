@@ -65,20 +65,27 @@ module ProjectStatePlugin
       return parms
     end
 
-    def workdays(u)
-      cf = UserCustomField.find_by(name: 'Working Week')
+    # A method that gives the standard working week at (default) 7 hours per day.
+    def standard_workdays()
+      workingDays = ['Mon','Tue','Wed','Thu','Fri']
+      days = {}
+      workingDays.each do |a|
+        days[Date::ABBR_DAYNAMES.find_index(a)] = ProjectStatePlugin::Defaults::HOURS_PER_DAY
+      end
+      return days
+    end
+      
+    # The proportion of a full time employee this user is.
+    # Returns a float between 0 and 1.
+    def workproportion(u)
+      cf = UserCustomField.find_by(name: 'Proportion of Full Time')
       cv = CustomValue.find_by(customized: u, custom_field: cf)
       if cv.nil?
         cv = cf.default_value
       else
         cv = cv.value
       end
-      days = {}
-      cv.split(";").each do |dv|
-        (a,b) = dv.split(":")
-        days[Date::ABBR_DAYNAMES.find_index(a)] = b.to_f
-      end
-      return days
+      return cv.to_f
     end
 
     def working_hours(day,dmap,interval='by_month')
@@ -102,11 +109,18 @@ module ProjectStatePlugin
       d = first
       wh = 0
       while d < last
+        # If day is in the map of days worked, add the number of hours in that day.
         wh += dmap[d.wday] if dmap.has_key? d.wday
         d += 1
       end
       wh -= bh
       return wh
+    end
+
+    # A development of the above method, this takes the proportion
+    # of a full time employee a user works (see workproportion()).
+    def working_hours_by_proportion(day,proportion,interval='by_month')
+      return working_hours(day, standard_workdays(), interval) * proportion
     end
 
     def save_file(srcfd)
