@@ -40,20 +40,17 @@ class ProjectState::ProjectStateReportsController < ApplicationController
   end
 
   def billable_time()
-#    projlist = collectProjects(Setting.plugin_project_state['billable'])
     leavelist = collectProjects('Leave')
     @users = {}
     @times = {}
     @absent = {}
     @frac = {}
-    @wmap = {}
     Group.find_by(lastname: 'Bioinformatics Core').users.each do |u|
       next unless u.status == Principal::STATUS_ACTIVE
       @users[u.id] = u
       @times[u.id] = [0] * @ends.length
       @absent[u.id] = [0] * @ends.length
       @frac[u.id] = [0] * @ends.length
-      @wmap[u.id] = workdays(u)
     end
     ind = 0
     # can't use "find_each" here because it is incompatible with "order"
@@ -69,10 +66,6 @@ class ProjectState::ProjectStateReportsController < ApplicationController
         $pslog.warn("AE: ends[-1]=#{@ends[-1]}  logdate=#{log.spent_on}")
         next
       end
-#      if projlist.include? log.project_id
-#        @times[u][ind] += log.hours
-#      elsif leavelist.include? log.project_id
-#        @absent[u][ind] += log.hours
       if leavelist.include? log.project_id
         @absent[u][ind] += log.hours
       else
@@ -90,10 +83,6 @@ class ProjectState::ProjectStateReportsController < ApplicationController
       @users.keys.each do |u|
         wp = workproportion(u)
         wh = working_hours_by_proportion(@ends[i]-1,wp,@params['interval_type'])
-
-        # Original version, using days and hours:
-        # wh = working_hours(@ends[i]-1,@wmap[u],@params['interval_type'])
-
         hours = @times[u][i]
         expected = wh - @absent[u][i]
         if expected > 0

@@ -80,22 +80,6 @@ module ProjectStatePlugin
       return days
     end
       
-    def workdays(u)
-      cf = UserCustomField.find_by(name: 'Working Week')
-      cv = CustomValue.find_by(customized: u, custom_field: cf)
-      if cv.nil?
-        cv = cf.default_value
-      else
-        cv = cv.value
-      end
-      days = {}
-      cv.split(";").each do |dv|
-        (a,b) = dv.split(":")
-        days[Date::ABBR_DAYNAMES.find_index(a)] = b.to_f
-      end
-      return days
-    end
-    
     # The proportion of a full time employee this user is.
     # Returns a float between 0 and 1.
     def workproportion(u)
