@@ -38,7 +38,7 @@ module ProjectStatePlugin
   
       # check time in state (or since last logged time, if 'Active')
       interval = days_in_state(issue)
-      if interval > issue.state_timeout
+      if not issue.state_timeout.nil? and interval > issue.state_timeout
         if issue.state == 'Active'
           flags << l(:flag_days_since_logged_time,
                      :state => issue.state,
@@ -53,7 +53,7 @@ module ProjectStatePlugin
       end
   
       # logged time exceeds limits
-      if issue.spent_hours > issue.hours_limit
+      if not issue.spent_hours.nil? and not issue.hours_limit.nil? and issue.spent_hours > issue.hours_limit
         flags << l(:flag_hours_logged,
                    :logged => number_with_precision(issue.spent_hours,precision: 2),
                    :threshold => number_with_precision(issue.hours_limit,precision: 2))

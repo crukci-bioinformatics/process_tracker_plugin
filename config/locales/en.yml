@@ -5,6 +5,8 @@ en:
   project_state_title: "Project State Summary"
   filter_report_link: "Pale Report"
   regular_report_link: "The Regular Report"
+  my_state_filtered_link: "Analysis Issues Only"
+  my_state_all_link: "All Open Issues"
   project_reports_title: "Project State Reports"
   project_reports_caption: "Reports"
   bank_holidays_title: "Bank Holidays: England and Wales"

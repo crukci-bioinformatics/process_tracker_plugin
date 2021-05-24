@@ -45,6 +45,11 @@ module ProjectStatePlugin
       return iss_set
     end
 
+    def collectAllOpenIssues()
+      closed = IssueStatus.where(is_closed: true)
+      return Issue.where.not(status: closed)
+    end
+      
     def login2email(login)
       return User.find_by(login: login).email_address.address
     end
